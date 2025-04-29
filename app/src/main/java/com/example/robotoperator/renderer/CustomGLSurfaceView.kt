@@ -7,8 +7,11 @@ class CustomGLSurfaceView(context: Context) : GLSurfaceView(context) {
     private val renderer: GLRenderer
 
     init {
-        // Create an OpenGL ES 3.0 context
+        // Create an OpenGL ES 3.2 context
         setEGLContextClientVersion(3)
+        
+        // Configure context with additional flags for 3.2 support
+        setEGLConfigChooser(8, 8, 8, 8, 16, 0)
 
         renderer = GLRenderer()
         
