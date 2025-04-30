@@ -3,12 +3,14 @@ package com.example.robotoperator.opengl.renderer
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix
+import android.util.Log
 import com.example.robotoperator.opengl.Floor
 import com.example.robotoperator.opengl.Light
 import com.example.robotoperator.opengl.Model
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
+private const val TAG = "RobotOperator"
 
 class CustomModelRenderer(private val model: Model?) : GLSurfaceView.Renderer {
     private val light = Light(floatArrayOf(0.0f, 0.0f, MODEL_BOUND_SIZE * 10, 1.0f))
@@ -23,7 +25,12 @@ class CustomModelRenderer(private val model: Model?) : GLSurfaceView.Renderer {
     private var translateY = 0f
     private var translateZ = 0f
 
+    init {
+        Log.d(TAG, "🎮 Initializing CustomModelRenderer with model: ${model != null}")
+    }
+
     fun translate(dx: Float, dy: Float, dz: Float) {
+        Log.v(TAG, "📏 Translating dx=$dx, dy=$dy, dz=$dz")
         val translateScaleFactor = MODEL_BOUND_SIZE / 200f
         translateX += dx * translateScaleFactor
         translateY += dy * translateScaleFactor
@@ -34,6 +41,7 @@ class CustomModelRenderer(private val model: Model?) : GLSurfaceView.Renderer {
     }
 
     fun rotate(aX: Float, aY: Float) {
+        Log.v(TAG, "🔄 Rotating aX=$aX, aY=$aY")
         val rotateScaleFactor = 0.5f
         rotateAngleX -= aX * rotateScaleFactor
         rotateAngleY += aY * rotateScaleFactor
@@ -41,6 +49,7 @@ class CustomModelRenderer(private val model: Model?) : GLSurfaceView.Renderer {
     }
 
     private fun updateViewMatrix() {
+        Log.v(TAG, "🔄 Updating view matrix")
         Matrix.setLookAtM(viewMatrix, 0, 0f, 0f, translateZ, 0f, 0f, 0f, 0f, 1.0f, 0.0f)
         Matrix.translateM(viewMatrix, 0, -translateX, -translateY, 0f)
         Matrix.rotateM(viewMatrix, 0, rotateAngleX, 1f, 0f, 0f)
@@ -48,12 +57,14 @@ class CustomModelRenderer(private val model: Model?) : GLSurfaceView.Renderer {
     }
 
     override fun onDrawFrame(unused: GL10) {
+        Log.v(TAG, "🎨 Drawing frame")
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
         floor.draw(viewMatrix, projectionMatrix, light)
         model?.draw(viewMatrix, projectionMatrix, light)
     }
 
     override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) {
+        Log.d(TAG, "📐 Surface changed: width=$width, height=$height")
         GLES20.glViewport(0, 0, width, height)
         val ratio = width.toFloat() / height
         Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1f, 1f, Z_NEAR, Z_FAR)
@@ -73,9 +84,11 @@ class CustomModelRenderer(private val model: Model?) : GLSurfaceView.Renderer {
         rotateAngleX = -15.0f
         rotateAngleY = 15.0f
         updateViewMatrix()
+        Log.d(TAG, "🎯 Initial view setup completed")
     }
 
     override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
+        Log.d(TAG, "🆕 Surface created")
         GLES20.glClearColor(0.2f, 0.2f, 0.2f, 1f)
         GLES20.glEnable(GLES20.GL_CULL_FACE)
         GLES20.glEnable(GLES20.GL_DEPTH_TEST)
@@ -86,6 +99,7 @@ class CustomModelRenderer(private val model: Model?) : GLSurfaceView.Renderer {
         model?.let {
             it.setup(MODEL_BOUND_SIZE)
             floor.setOffsetY(it.floorOffset)
+            Log.d(TAG, "✅ Model and floor setup completed")
         }
     }
 
