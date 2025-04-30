@@ -3,10 +3,13 @@ package com.example.robotoperator.opengl.renderer
 import android.content.Context
 import android.graphics.PointF
 import android.opengl.GLSurfaceView
+import android.util.Log
 import android.view.MotionEvent
 import com.example.robotoperator.util.Util.pxToDp
 import com.example.robotoperator.opengl.Model
 import kotlin.math.sqrt
+
+private const val TAG = "RobotOperator"
 
 class CustomModelSurfaceView(context: Context, model: Model?) : GLSurfaceView(context) {
     private val renderer: CustomModelRenderer
@@ -16,13 +19,24 @@ class CustomModelSurfaceView(context: Context, model: Model?) : GLSurfaceView(co
     private var pinchStartDistance = 0.0f
     private var touchMode = TOUCH_NONE
 
+    init {
+        Log.d(TAG, "🎨 Initializing CustomModelSurfaceView")
+        setEGLContextClientVersion(2)
+        renderer = CustomModelRenderer(model)
+        setRenderer(renderer)
+        renderMode = RENDERMODE_WHEN_DIRTY
+        Log.d(TAG, "🎯 Renderer set and mode configured")
+    }
+
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.action and MotionEvent.ACTION_MASK) {
             MotionEvent.ACTION_DOWN -> {
+                Log.v(TAG, "👇 Touch DOWN at x=${event.x}, y=${event.y}")
                 previousX = event.x
                 previousY = event.y
             }
             MotionEvent.ACTION_MOVE -> {
+                Log.v(TAG, "👆 Touch MOVE with ${event.pointerCount} pointers")
                 if (event.pointerCount == 1) {
                     if (touchMode != TOUCH_ROTATE) {
                         previousX = event.x
@@ -36,7 +50,9 @@ class CustomModelSurfaceView(context: Context, model: Model?) : GLSurfaceView(co
                     previousX = x
                     previousY = y
                     renderer.rotate(pxToDp(dy), pxToDp(dx))
+                    Log.v(TAG, "🔄 Rotating dx=${pxToDp(dx)}, dy=${pxToDp(dy)}")
                 } else if (event.pointerCount == 2) {
+                    Log.v(TAG, "🤏 Pinch gesture detected")
                     if (touchMode != TOUCH_ZOOM) {
                         pinchStartDistance = getPinchDistance(event)
                         getPinchCenterPoint(event, pinchStartPoint)
@@ -53,17 +69,39 @@ class CustomModelSurfaceView(context: Context, model: Model?) : GLSurfaceView(co
                         val pinchScale = getPinchDistance(event) / pinchStartDistance
                         pinchStartDistance = getPinchDistance(event)
                         renderer.translate(pxToDp(dx), pxToDp(dy), pinchScale)
+                        Log.v(TAG, "📏 Zooming scale=$pinchScale, translation dx=${pxToDp(dx)}, dy=${pxToDp(dy)}")
                     }
                 }
                 requestRender()
             }
             MotionEvent.ACTION_UP -> {
+                Log.v(TAG, "✋ Touch UP")
                 pinchStartPoint.x = 0.0f
                 pinchStartPoint.y = 0.0f
                 touchMode = TOUCH_NONE
             }
         }
         return true
+    }
+
+    override fun onAttachedToWindow() {
+        Log.d(TAG, "📌 onAttachedToWindow")
+        super.onAttachedToWindow()
+    }
+
+    override fun onDetachedFromWindow() {
+        Log.d(TAG, "🔌 onDetachedFromWindow")
+        super.onDetachedFromWindow()
+    }
+
+    override fun onPause() {
+        Log.d(TAG, "⏸️ onPause")
+        super.onPause()
+    }
+
+    override fun onResume() {
+        Log.d(TAG, "▶️ onResume")
+        super.onResume()
     }
 
     private fun getPinchDistance(event: MotionEvent): Float {
@@ -81,12 +119,5 @@ class CustomModelSurfaceView(context: Context, model: Model?) : GLSurfaceView(co
         private const val TOUCH_NONE = 0
         private const val TOUCH_ROTATE = 1
         private const val TOUCH_ZOOM = 2
-    }
-
-    init {
-        setEGLContextClientVersion(2)
-        renderer = CustomModelRenderer(model)
-        setRenderer(renderer)
-        renderMode = RENDERMODE_WHEN_DIRTY
     }
 }
