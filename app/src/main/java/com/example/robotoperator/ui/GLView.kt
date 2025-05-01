@@ -16,7 +16,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.robotoperator.opengl.Model
 import com.example.robotoperator.opengl.ply.PlyParser
@@ -49,6 +48,8 @@ fun GLView(modifier: Modifier = Modifier) {
             null
         }
     }
+
+    var glView: CustomModelSurfaceView? = null
     
     Column(modifier = modifier.fillMaxSize()) {
         AndroidView(
@@ -57,7 +58,8 @@ fun GLView(modifier: Modifier = Modifier) {
                 .fillMaxWidth(),
             factory = { context ->
                 Log.d(TAG, "🏭 Creating new CustomModelSurfaceView")
-                CustomModelSurfaceView(context, model).apply {
+                CustomModelSurfaceView(context, model).also { view ->
+                    glView = view
                     Log.d(TAG, "🛠️ CustomModelSurfaceView initialized")
                 }
             }
@@ -67,12 +69,12 @@ fun GLView(modifier: Modifier = Modifier) {
             modifier = Modifier.fillMaxWidth(),
             actions = {
                 IconButton(onClick = { 
-                    Log.d(TAG, "🔄 Reset button clicked")
-                    /* TODO: Handle reset */ 
+                    Log.d(TAG, "🔄 Rotate button clicked")
+                    glView?.rotate90()
                 }) {
                     Icon(
                         imageVector = Icons.Default.Refresh,
-                        contentDescription = "Reset view"
+                        contentDescription = "Rotate 90°"
                     )
                 }
                 IconButton(onClick = { 

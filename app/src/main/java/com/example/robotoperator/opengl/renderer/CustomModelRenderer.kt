@@ -29,6 +29,20 @@ class CustomModelRenderer(private val model: Model?) : GLSurfaceView.Renderer {
         Log.d(TAG, "🎮 Initializing CustomModelRenderer with model: ${model != null}")
     }
 
+    fun getRotationY(): Float = rotateAngleY
+
+    fun setRotationY(angle: Float) {
+        rotateAngleY = angle
+        updateViewMatrix()
+    }
+
+    fun rotate90Degrees() {
+        Log.d(TAG, "🔄 Rotating 90 degrees from current angle Y: $rotateAngleY")
+        rotateAngleY = (rotateAngleY + 90f) % 360f
+        updateViewMatrix()
+        Log.d(TAG, "✅ Rotation complete. New angle Y: $rotateAngleY")
+    }
+
     fun translate(dx: Float, dy: Float, dz: Float) {
         Log.v(TAG, "📏 Translating dx=$dx, dy=$dy, dz=$dz")
         val translateScaleFactor = MODEL_BOUND_SIZE / 200f
