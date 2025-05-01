@@ -28,6 +28,7 @@ class CustomModelSurfaceView(context: Context, model: Model?) : GLSurfaceView(co
         
         renderer = CustomModelRenderer(model)
         setRenderer(renderer)
+        // Only render when there is a change in the drawing data
         renderMode = RENDERMODE_WHEN_DIRTY
         Log.d(TAG, "🎯 Renderer set and mode configured")
     }
@@ -119,10 +120,15 @@ class CustomModelSurfaceView(context: Context, model: Model?) : GLSurfaceView(co
         pt.y = (event.getY(0) + event.getY(1)) * 0.5f
     }
 
-    fun rotateY180() {
-        Log.d(TAG, "🔄 Executing 180-degree Y rotation")
-        renderer.rotateY180()
-        requestRender()  // Explicitly request a single render
+    fun rotate90() {
+        Log.d(TAG, "🔄 Requesting 90-degree rotation")
+        // Queue the rotation operation to run on the GL thread
+        //todo can be done better
+        queueEvent {
+            Log.d(TAG, "🎯 Executing rotation on GL thread")
+            renderer.rotate90Degrees()
+            requestRender()
+        }
     }
 
     companion object {
