@@ -1,7 +1,7 @@
 package com.example.robotoperator.opengl
 
 import android.opengl.Matrix
-
+import java.nio.FloatBuffer
 
 abstract class Model {
 
@@ -28,6 +28,9 @@ abstract class Model {
     protected var minX = Float.MAX_VALUE
     protected var minY = Float.MAX_VALUE
     protected var minZ = Float.MAX_VALUE
+
+    // Make vertexBuffer publicly readable but only settable by subclasses
+    open val vertexBuffer: FloatBuffer? = null
 
     open fun setup(boundSize: Float) {
         initModelMatrix(boundSize)

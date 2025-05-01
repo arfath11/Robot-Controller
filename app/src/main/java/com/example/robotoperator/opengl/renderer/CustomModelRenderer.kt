@@ -13,10 +13,10 @@ import javax.microedition.khronos.opengles.GL10
 
 private const val TAG = "RobotOperator"
 
-class CustomModelRenderer(private val model: Model?) : GLSurfaceView.Renderer {
+class CustomModelRenderer(val model: Model?) : GLSurfaceView.Renderer {
     private val light = Light(floatArrayOf(0.0f, 0.0f, LIGHT_POSITION_Z, 1.0f))
     private val floor = Floor()
-    private val cube = CubeModel()
+    val cube = CubeModel()
     
     private var isCubeSelected = false
 

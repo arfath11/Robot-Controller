@@ -148,6 +148,36 @@ class CustomModelSurfaceView(context: Context, model: Model?) : GLSurfaceView(co
         }
     }
 
+    // Function to show cube coordinates
+    fun showCubeCoordinates() {
+        queueEvent {
+            if (renderer.isCubeSelected()) {
+                renderer.cube.getWorldSpaceCoordinates()
+            } else {
+                Log.d(TAG, "Cannot show coordinates - cube is not selected")
+            }
+        }
+    }
+
+    // Function to find points inside the cube
+    fun findPointsInCube() {
+        queueEvent {
+            if (renderer.isCubeSelected()) {
+                renderer.model?.let { model ->
+                    // Get cube corners in world space
+                    val cubeCorners = renderer.cube.getWorldSpaceCoordinates()
+                    // Find points inside cube
+                    val points = renderer.cube.findPointsInCube(model)
+                    Log.d(TAG, "Found ${points.size} points inside the cube")
+                } ?: Log.d(TAG, "No model available for point detection")
+            } else {
+                Log.d(TAG, "Cannot find points - cube is not selected")
+            }
+        }
+        requestRender()
+
+    }
+
     companion object {
         private const val TOUCH_NONE = 0
         private const val TOUCH_ROTATE = 1
