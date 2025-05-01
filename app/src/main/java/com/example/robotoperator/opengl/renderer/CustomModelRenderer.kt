@@ -1,6 +1,6 @@
 package com.example.robotoperator.opengl.renderer
 
-import android.opengl.GLES20
+import android.opengl.GLES32
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix
 import android.util.Log
@@ -48,6 +48,12 @@ class CustomModelRenderer(private val model: Model?) : GLSurfaceView.Renderer {
         updateViewMatrix()
     }
 
+    fun rotateY180() {
+        Log.d(TAG, "🔄 Rotating model 180 degrees around Y axis")
+        rotateAngleY += 180f
+        updateViewMatrix()
+    }
+
     private fun updateViewMatrix() {
         Log.v(TAG, "🔄 Updating view matrix")
         Matrix.setLookAtM(viewMatrix, 0, 0f, 0f, translateZ, 0f, 0f, 0f, 0f, 1.0f, 0.0f)
@@ -58,14 +64,14 @@ class CustomModelRenderer(private val model: Model?) : GLSurfaceView.Renderer {
 
     override fun onDrawFrame(unused: GL10) {
         Log.v(TAG, "🎨 Drawing frame")
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
+        GLES32.glClear(GLES32.GL_COLOR_BUFFER_BIT or GLES32.GL_DEPTH_BUFFER_BIT)
         floor.draw(viewMatrix, projectionMatrix, light)
         model?.draw(viewMatrix, projectionMatrix, light)
     }
 
     override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) {
         Log.d(TAG, "📐 Surface changed: width=$width, height=$height")
-        GLES20.glViewport(0, 0, width, height)
+        GLES32.glViewport(0, 0, width, height)
         val ratio = width.toFloat() / height
         Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1f, 1f, Z_NEAR, Z_FAR)
 
@@ -89,11 +95,11 @@ class CustomModelRenderer(private val model: Model?) : GLSurfaceView.Renderer {
 
     override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
         Log.d(TAG, "🆕 Surface created")
-        GLES20.glClearColor(0.2f, 0.2f, 0.2f, 1f)
-        GLES20.glEnable(GLES20.GL_CULL_FACE)
-        GLES20.glEnable(GLES20.GL_DEPTH_TEST)
-        //GLES20.glEnable(GLES20.GL_BLEND);
-        //GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+        GLES32.glClearColor(0.2f, 0.2f, 0.2f, 1f)
+        GLES32.glEnable(GLES32.GL_CULL_FACE)
+        GLES32.glEnable(GLES32.GL_DEPTH_TEST)
+        //GLES32.glEnable(GLES32.GL_BLEND);
+        //GLES32.glBlendFunc(GLES32.GL_SRC_ALPHA, GLES32.GL_ONE_MINUS_SRC_ALPHA);
 
         floor.setup(MODEL_BOUND_SIZE)
         model?.let {

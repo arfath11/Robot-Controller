@@ -1,5 +1,5 @@
 package com.example.robotoperator.opengl
-import android.opengl.GLES20
+import android.opengl.GLES32
 import android.opengl.Matrix
 import com.example.robotoperator.util.Util.compileProgram
 import java.nio.FloatBuffer
@@ -17,8 +17,8 @@ open class ArrayModel : Model() {
     protected var useColorBuffer = false
 
     override fun setup(boundSize: Float) {
-        if (GLES20.glIsProgram(glProgram)) {
-            GLES20.glDeleteProgram(glProgram)
+        if (GLES32.glIsProgram(glProgram)) {
+            GLES32.glDeleteProgram(glProgram)
             glProgram = -1
         }
         glProgram = if (useColorBuffer) {
@@ -33,54 +33,54 @@ open class ArrayModel : Model() {
         if (vertexBuffer == null || normalBuffer == null) {
             return
         }
-        GLES20.glUseProgram(glProgram)
+        GLES32.glUseProgram(glProgram)
 
-        val mvpMatrixHandle = GLES20.glGetUniformLocation(glProgram, "u_MVP")
-        val positionHandle = GLES20.glGetAttribLocation(glProgram, "a_Position")
-        val normalHandle = GLES20.glGetAttribLocation(glProgram, "a_Normal")
-        val lightPosHandle = GLES20.glGetUniformLocation(glProgram, "u_LightPos")
-        val ambientColorHandle = GLES20.glGetUniformLocation(glProgram, "u_ambientColor")
-        val diffuseColorHandle = GLES20.glGetUniformLocation(glProgram, "u_diffuseColor")
-        val specularColorHandle = GLES20.glGetUniformLocation(glProgram, "u_specularColor")
+        val mvpMatrixHandle = GLES32.glGetUniformLocation(glProgram, "u_MVP")
+        val positionHandle = GLES32.glGetAttribLocation(glProgram, "a_Position")
+        val normalHandle = GLES32.glGetAttribLocation(glProgram, "a_Normal")
+        val lightPosHandle = GLES32.glGetUniformLocation(glProgram, "u_LightPos")
+        val ambientColorHandle = GLES32.glGetUniformLocation(glProgram, "u_ambientColor")
+        val diffuseColorHandle = GLES32.glGetUniformLocation(glProgram, "u_diffuseColor")
+        val specularColorHandle = GLES32.glGetUniformLocation(glProgram, "u_specularColor")
         var colorHandle = -1
 
-        GLES20.glEnableVertexAttribArray(positionHandle)
-        GLES20.glVertexAttribPointer(positionHandle, COORDS_PER_VERTEX, GLES20.GL_FLOAT, false,
+        GLES32.glEnableVertexAttribArray(positionHandle)
+        GLES32.glVertexAttribPointer(positionHandle, COORDS_PER_VERTEX, GLES32.GL_FLOAT, false,
                 VERTEX_STRIDE, vertexBuffer)
-        GLES20.glEnableVertexAttribArray(normalHandle)
-        GLES20.glVertexAttribPointer(normalHandle, COORDS_PER_VERTEX, GLES20.GL_FLOAT, false,
+        GLES32.glEnableVertexAttribArray(normalHandle)
+        GLES32.glVertexAttribPointer(normalHandle, COORDS_PER_VERTEX, GLES32.GL_FLOAT, false,
                 VERTEX_STRIDE, normalBuffer)
 
         if (colorBuffer != null) {
-            colorHandle = GLES20.glGetAttribLocation(glProgram, "a_Color")
-            GLES20.glEnableVertexAttribArray(colorHandle)
-            GLES20.glVertexAttribPointer(colorHandle, 4, GLES20.GL_FLOAT, false, 4 * BYTES_PER_FLOAT, colorBuffer)
+            colorHandle = GLES32.glGetAttribLocation(glProgram, "a_Color")
+            GLES32.glEnableVertexAttribArray(colorHandle)
+            GLES32.glVertexAttribPointer(colorHandle, 4, GLES32.GL_FLOAT, false, 4 * BYTES_PER_FLOAT, colorBuffer)
         }
 
         Matrix.multiplyMM(mvMatrix, 0, viewMatrix, 0, modelMatrix, 0)
         Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, mvMatrix, 0)
 
-        GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, mvpMatrix, 0)
-        GLES20.glUniform3fv(lightPosHandle, 1, light.positionInEyeSpace, 0)
+        GLES32.glUniformMatrix4fv(mvpMatrixHandle, 1, false, mvpMatrix, 0)
+        GLES32.glUniform3fv(lightPosHandle, 1, light.positionInEyeSpace, 0)
         if (ambientColorHandle >= 0) {
-            GLES20.glUniform4fv(ambientColorHandle, 1, light.ambientColor, 0)
+            GLES32.glUniform4fv(ambientColorHandle, 1, light.ambientColor, 0)
         }
         if (diffuseColorHandle >= 0) {
-            GLES20.glUniform4fv(diffuseColorHandle, 1, light.diffuseColor, 0)
+            GLES32.glUniform4fv(diffuseColorHandle, 1, light.diffuseColor, 0)
         }
-        GLES20.glUniform4fv(specularColorHandle, 1, light.specularColor, 0)
+        GLES32.glUniform4fv(specularColorHandle, 1, light.specularColor, 0)
 
         drawFunc()
 
         if (colorHandle >= 0) {
-            GLES20.glDisableVertexAttribArray(colorHandle)
+            GLES32.glDisableVertexAttribArray(colorHandle)
         }
-        GLES20.glDisableVertexAttribArray(normalHandle)
-        GLES20.glDisableVertexAttribArray(positionHandle)
+        GLES32.glDisableVertexAttribArray(normalHandle)
+        GLES32.glDisableVertexAttribArray(positionHandle)
     }
 
     protected open fun drawFunc() {
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, vertexCount)
+        GLES32.glDrawArrays(GLES32.GL_TRIANGLES, 0, vertexCount)
     }
 
     companion object {

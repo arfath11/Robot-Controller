@@ -1,6 +1,6 @@
 package com.example.robotoperator.opengl
 
-import android.opengl.GLES20
+import android.opengl.GLES32
 import android.opengl.Matrix
 import com.example.robotoperator.util.Util.compileProgram
 import java.nio.ByteBuffer
@@ -59,8 +59,8 @@ class Floor : ArrayModel() {
         normalBuffer!!.put(normals)
         normalBuffer!!.position(0)
 
-        if (GLES20.glIsProgram(glProgram)) {
-            GLES20.glDeleteProgram(glProgram)
+        if (GLES32.glIsProgram(glProgram)) {
+            GLES32.glDeleteProgram(glProgram)
             glProgram = -1
         }
         glProgram = compileProgram(R.raw.floor_vertex, R.raw.floor_fragment, arrayOf("a_Position", "a_Normal"))
@@ -76,33 +76,33 @@ class Floor : ArrayModel() {
             return
         }
 
-        GLES20.glUseProgram(glProgram)
-        val modelMatrixHandle = GLES20.glGetUniformLocation(glProgram, "u_Model")
-        val mvpMatrixHandle = GLES20.glGetUniformLocation(glProgram, "u_MVP")
-        val positionHandle = GLES20.glGetAttribLocation(glProgram, "a_Position")
-        val normalHandle = GLES20.glGetAttribLocation(glProgram, "a_Normal")
-        val floorColorHandle = GLES20.glGetUniformLocation(glProgram, "u_FloorColor")
-        val lineColorHandle = GLES20.glGetUniformLocation(glProgram, "u_LineColor")
-        val maxDepthHandle = GLES20.glGetUniformLocation(glProgram, "u_MaxDepth")
-        val gridUnitHandle = GLES20.glGetUniformLocation(glProgram, "u_GridUnit")
-        GLES20.glEnableVertexAttribArray(positionHandle)
-        GLES20.glVertexAttribPointer(positionHandle, COORDS_PER_VERTEX, GLES20.GL_FLOAT, false, VERTEX_STRIDE, vertexBuffer)
+        GLES32.glUseProgram(glProgram)
+        val modelMatrixHandle = GLES32.glGetUniformLocation(glProgram, "u_Model")
+        val mvpMatrixHandle = GLES32.glGetUniformLocation(glProgram, "u_MVP")
+        val positionHandle = GLES32.glGetAttribLocation(glProgram, "a_Position")
+        val normalHandle = GLES32.glGetAttribLocation(glProgram, "a_Normal")
+        val floorColorHandle = GLES32.glGetUniformLocation(glProgram, "u_FloorColor")
+        val lineColorHandle = GLES32.glGetUniformLocation(glProgram, "u_LineColor")
+        val maxDepthHandle = GLES32.glGetUniformLocation(glProgram, "u_MaxDepth")
+        val gridUnitHandle = GLES32.glGetUniformLocation(glProgram, "u_GridUnit")
+        GLES32.glEnableVertexAttribArray(positionHandle)
+        GLES32.glVertexAttribPointer(positionHandle, COORDS_PER_VERTEX, GLES32.GL_FLOAT, false, VERTEX_STRIDE, vertexBuffer)
         if (normalHandle >= 0) {
-            GLES20.glEnableVertexAttribArray(normalHandle)
-            GLES20.glVertexAttribPointer(normalHandle, COORDS_PER_VERTEX, GLES20.GL_FLOAT, false, VERTEX_STRIDE, normalBuffer)
+            GLES32.glEnableVertexAttribArray(normalHandle)
+            GLES32.glVertexAttribPointer(normalHandle, COORDS_PER_VERTEX, GLES32.GL_FLOAT, false, VERTEX_STRIDE, normalBuffer)
         }
-        GLES20.glUniformMatrix4fv(modelMatrixHandle, 1, false, modelMatrix, 0)
+        GLES32.glUniformMatrix4fv(modelMatrixHandle, 1, false, modelMatrix, 0)
         Matrix.multiplyMM(mvMatrix, 0, viewMatrix, 0, modelMatrix, 0)
         Matrix.multiplyMM(mvpMatrix, 0, projectionMatrix, 0, mvMatrix, 0)
-        GLES20.glUniformMatrix4fv(mvpMatrixHandle, 1, false, mvpMatrix, 0)
-        GLES20.glUniform4fv(floorColorHandle, 1, floorColor, 0)
-        GLES20.glUniform4fv(lineColorHandle, 1, lineColor, 0)
-        GLES20.glUniform1f(maxDepthHandle, extent)
-        GLES20.glUniform1f(gridUnitHandle, extent / 75.0f)
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, vertexCount)
+        GLES32.glUniformMatrix4fv(mvpMatrixHandle, 1, false, mvpMatrix, 0)
+        GLES32.glUniform4fv(floorColorHandle, 1, floorColor, 0)
+        GLES32.glUniform4fv(lineColorHandle, 1, lineColor, 0)
+        GLES32.glUniform1f(maxDepthHandle, extent)
+        GLES32.glUniform1f(gridUnitHandle, extent / 75.0f)
+        GLES32.glDrawArrays(GLES32.GL_TRIANGLES, 0, vertexCount)
         if (normalHandle >= 0) {
-            GLES20.glDisableVertexAttribArray(normalHandle)
+            GLES32.glDisableVertexAttribArray(normalHandle)
         }
-        GLES20.glDisableVertexAttribArray(positionHandle)
+        GLES32.glDisableVertexAttribArray(positionHandle)
     }
 }

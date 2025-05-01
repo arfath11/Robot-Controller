@@ -1,6 +1,6 @@
 package com.example.robotoperator.opengl
 
-import android.opengl.GLES20
+import android.opengl.GLES32
 import java.nio.IntBuffer
 
 
@@ -12,7 +12,7 @@ open class IndexedModel : ArrayModel() {
         if (indexBuffer == null || indexCount == 0) {
             return
         }
-        GLES20.glDrawElements(GLES20.GL_TRIANGLES, indexCount, GLES20.GL_UNSIGNED_INT, indexBuffer)
+        GLES32.glDrawElements(GLES32.GL_TRIANGLES, indexCount, GLES32.GL_UNSIGNED_INT, indexBuffer)
     }
 
     companion object {

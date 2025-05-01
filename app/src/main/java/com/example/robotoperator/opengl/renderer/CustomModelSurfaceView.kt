@@ -12,7 +12,7 @@ import kotlin.math.sqrt
 private const val TAG = "RobotOperator"
 
 class CustomModelSurfaceView(context: Context, model: Model?) : GLSurfaceView(context) {
-    private val renderer: CustomModelRenderer
+    var renderer: CustomModelRenderer
     private var previousX = 0f
     private var previousY = 0f
     private val pinchStartPoint = PointF()
@@ -21,7 +21,11 @@ class CustomModelSurfaceView(context: Context, model: Model?) : GLSurfaceView(co
 
     init {
         Log.d(TAG, "🎨 Initializing CustomModelSurfaceView")
-        setEGLContextClientVersion(2)
+        setEGLContextClientVersion(3)
+        
+        // Configure context with additional flags for 3.2 support
+        setEGLConfigChooser(8, 8, 8, 8, 16, 0)
+        
         renderer = CustomModelRenderer(model)
         setRenderer(renderer)
         renderMode = RENDERMODE_WHEN_DIRTY
@@ -113,6 +117,12 @@ class CustomModelSurfaceView(context: Context, model: Model?) : GLSurfaceView(co
     private fun getPinchCenterPoint(event: MotionEvent, pt: PointF) {
         pt.x = (event.getX(0) + event.getX(1)) * 0.5f
         pt.y = (event.getY(0) + event.getY(1)) * 0.5f
+    }
+
+    fun rotateY180() {
+        Log.d(TAG, "🔄 Executing 180-degree Y rotation")
+        renderer.rotateY180()
+        requestRender()  // Explicitly request a single render
     }
 
     companion object {
