@@ -8,7 +8,7 @@
     <uses-permission android:name="android.permission.VIBRATE"/>
 
     <!-- Required hardware features -->
-    <uses-feature android:glEsVersion="0x00020000" android:required="true" />
+    <uses-feature android:glEsVersion="0x00030002" android:required="true" />
 <!--    todo check to turn this on-->
 
     <!-- Texture compression support -->
