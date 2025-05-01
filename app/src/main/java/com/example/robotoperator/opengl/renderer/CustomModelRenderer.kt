@@ -7,6 +7,7 @@ import android.util.Log
 import com.example.robotoperator.opengl.Floor
 import com.example.robotoperator.opengl.Light
 import com.example.robotoperator.opengl.Model
+import com.example.robotoperator.opengl.CubeModel
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
@@ -15,6 +16,8 @@ private const val TAG = "RobotOperator"
 class CustomModelRenderer(private val model: Model?) : GLSurfaceView.Renderer {
     private val light = Light(floatArrayOf(0.0f, 0.0f, MODEL_BOUND_SIZE * 10, 1.0f))
     private val floor = Floor()
+    private val cube = CubeModel()
+    private var cubeScale = 1.0f
 
     private val projectionMatrix = FloatArray(16)
     private val viewMatrix = FloatArray(16)
@@ -79,8 +82,11 @@ class CustomModelRenderer(private val model: Model?) : GLSurfaceView.Renderer {
     override fun onDrawFrame(unused: GL10) {
         Log.v(TAG, "🎨 Drawing frame")
         GLES32.glClear(GLES32.GL_COLOR_BUFFER_BIT or GLES32.GL_DEPTH_BUFFER_BIT)
+        
+        // Draw the scene
         floor.draw(viewMatrix, projectionMatrix, light)
         model?.draw(viewMatrix, projectionMatrix, light)
+        cube.draw(viewMatrix, projectionMatrix, light)
     }
 
     override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) {
@@ -112,15 +118,26 @@ class CustomModelRenderer(private val model: Model?) : GLSurfaceView.Renderer {
         GLES32.glClearColor(0.2f, 0.2f, 0.2f, 1f)
         GLES32.glEnable(GLES32.GL_CULL_FACE)
         GLES32.glEnable(GLES32.GL_DEPTH_TEST)
-        //GLES32.glEnable(GLES32.GL_BLEND);
-        //GLES32.glBlendFunc(GLES32.GL_SRC_ALPHA, GLES32.GL_ONE_MINUS_SRC_ALPHA);
+        GLES32.glEnable(GLES32.GL_BLEND)
+        GLES32.glBlendFunc(GLES32.GL_SRC_ALPHA, GLES32.GL_ONE_MINUS_SRC_ALPHA)
 
         floor.setup(MODEL_BOUND_SIZE)
+        cube.setup(MODEL_BOUND_SIZE)
         model?.let {
             it.setup(MODEL_BOUND_SIZE)
             floor.setOffsetY(it.floorOffset)
             Log.d(TAG, "✅ Model and floor setup completed")
         }
+    }
+
+    fun setCubeScale(scale: Float) {
+        cubeScale = scale
+        Matrix.setIdentityM(cube.modelMatrix, 0)
+        Matrix.scaleM(cube.modelMatrix, 0, scale, scale, scale)
+    }
+
+    fun moveCube(dx: Float, dy: Float, dz: Float) {
+        Matrix.translateM(cube.modelMatrix, 0, dx, dy, dz)
     }
 
     companion object {
