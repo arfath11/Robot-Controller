@@ -11,9 +11,9 @@ open class ArrayModel : Model() {
     var vertexCount = 0
         protected set
 
-    protected var vertexBuffer: FloatBuffer? = null
+    override var vertexBuffer: FloatBuffer? = null
     protected var normalBuffer: FloatBuffer? = null
-    protected var colorBuffer: FloatBuffer? = null
+    var colorBuffer: FloatBuffer? = null
     protected var useColorBuffer = false
 
     override fun setup(boundSize: Float) {

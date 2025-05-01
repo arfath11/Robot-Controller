@@ -104,6 +104,42 @@ fun GLView(modifier: Modifier = Modifier) {
                         style = MaterialTheme.typography.labelLarge
                     )
                 }
+
+                // Show Coordinates button
+                Button(
+                    onClick = {
+                        Log.d(TAG, "📍 Show coordinates button clicked")
+                        glView?.showCubeCoordinates()
+                    },
+                    enabled = isSelectionMode,
+                    modifier = Modifier.padding(horizontal = 8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary
+                    )
+                ) {
+                    Text(
+                        text = "Show Coords",
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
+
+                // Find Points button
+                Button(
+                    onClick = {
+                        Log.d(TAG, "🔍 Find points button clicked")
+                        glView?.findPointsInCube()
+                    },
+                    enabled = isSelectionMode,
+                    modifier = Modifier.padding(horizontal = 8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.tertiary
+                    )
+                ) {
+                    Text(
+                        text = "Find Points",
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
             }
         )
     }
