@@ -18,7 +18,6 @@ abstract class Model {
     protected var glProgram = -1
 
     var modelMatrix = FloatArray(16)
-        protected set
 
     protected var mvMatrix = FloatArray(16)
     protected var mvpMatrix = FloatArray(16)

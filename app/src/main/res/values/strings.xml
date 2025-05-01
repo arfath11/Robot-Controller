@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Robot Operator</string>
+    <string name="exit_selection">Exit Selection</string>
+    <string name="select_cube">Select Cube</string>
 </resources>
