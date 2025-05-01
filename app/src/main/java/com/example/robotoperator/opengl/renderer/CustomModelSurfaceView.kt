@@ -33,31 +33,50 @@ class CustomModelSurfaceView(context: Context, model: Model?) : GLSurfaceView(co
         Log.d(TAG, "🎯 Renderer set and mode configured")
     }
 
+    // Add method to handle cube selection
+    fun setCubeSelected(selected: Boolean) {
+        queueEvent {
+            renderer.setCubeSelected(selected)
+            requestRender()
+        }
+    }
+
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.action and MotionEvent.ACTION_MASK) {
             MotionEvent.ACTION_DOWN -> {
-                Log.v(TAG, "👇 Touch DOWN at x=${event.x}, y=${event.y}")
                 previousX = event.x
                 previousY = event.y
             }
             MotionEvent.ACTION_MOVE -> {
-                Log.v(TAG, "👆 Touch MOVE with ${event.pointerCount} pointers")
                 if (event.pointerCount == 1) {
-                    if (touchMode != TOUCH_ROTATE) {
-                        previousX = event.x
-                        previousY = event.y
+                    if (renderer.isCubeSelected()) {
+                        // Move the cube if it's selected
+                        val x = event.x
+                        val y = event.y
+                        val dx = x - previousX
+                        val dy = y - previousY
+                        previousX = x
+                        previousY = y
+                        // Scale movement to match finger movement 1:1
+                        val moveScale = 0.01f 
+                        renderer.moveCube(-dx * moveScale, -dy * moveScale, 0f)
+                    } else {
+                        // Handle camera rotation when cube is not selected
+                        if (touchMode != TOUCH_ROTATE) {
+                            previousX = event.x
+                            previousY = event.y
+                        }
+                        touchMode = TOUCH_ROTATE
+                        val x = event.x
+                        val y = event.y
+                        val dx = x - previousX
+                        val dy = y - previousY
+                        previousX = x
+                        previousY = y
+                        renderer.rotate(pxToDp(dy), pxToDp(dx))
                     }
-                    touchMode = TOUCH_ROTATE
-                    val x = event.x
-                    val y = event.y
-                    val dx = x - previousX
-                    val dy = y - previousY
-                    previousX = x
-                    previousY = y
-                    renderer.rotate(pxToDp(dy), pxToDp(dx))
-                    Log.v(TAG, "🔄 Rotating dx=${pxToDp(dx)}, dy=${pxToDp(dy)}")
-                } else if (event.pointerCount == 2) {
-                    Log.v(TAG, "🤏 Pinch gesture detected")
+                } else if (event.pointerCount == 2 && !renderer.isCubeSelected()) {
+                    // Only handle pinch zoom when cube is not selected
                     if (touchMode != TOUCH_ZOOM) {
                         pinchStartDistance = getPinchDistance(event)
                         getPinchCenterPoint(event, pinchStartPoint)
@@ -74,13 +93,11 @@ class CustomModelSurfaceView(context: Context, model: Model?) : GLSurfaceView(co
                         val pinchScale = getPinchDistance(event) / pinchStartDistance
                         pinchStartDistance = getPinchDistance(event)
                         renderer.translate(pxToDp(dx), pxToDp(dy), pinchScale)
-                        Log.v(TAG, "📏 Zooming scale=$pinchScale, translation dx=${pxToDp(dx)}, dy=${pxToDp(dy)}")
                     }
                 }
                 requestRender()
             }
             MotionEvent.ACTION_UP -> {
-                Log.v(TAG, "✋ Touch UP")
                 pinchStartPoint.x = 0.0f
                 pinchStartPoint.y = 0.0f
                 touchMode = TOUCH_NONE
@@ -135,5 +152,6 @@ class CustomModelSurfaceView(context: Context, model: Model?) : GLSurfaceView(co
         private const val TOUCH_NONE = 0
         private const val TOUCH_ROTATE = 1
         private const val TOUCH_ZOOM = 2
+        private const val TOUCH_MOVE_CUBE = 3
     }
 }

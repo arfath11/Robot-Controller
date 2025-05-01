@@ -161,9 +161,12 @@ class CubeModel : ArrayModel() {
         // Initialize model matrix
         Matrix.setIdentityM(modelMatrix, 0)
         
-        // Scale the cube to match the bound size
-        val scale = boundSize * 0.2f // Make cube 20% of bound size
+        // Set cube size to 60% of the scene size
+        val scale = boundSize * 0.6f
         Matrix.scaleM(modelMatrix, 0, scale, scale, scale)
+        
+        // Move cube slightly forward for better visibility
+        Matrix.translateM(modelMatrix, 0, 0f, 0f, boundSize * 0.2f)
     }
 
     override fun draw(viewMatrix: FloatArray, projectionMatrix: FloatArray, light: Light) {
