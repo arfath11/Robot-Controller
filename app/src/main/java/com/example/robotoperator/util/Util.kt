@@ -4,6 +4,7 @@ import android.opengl.GLES20
 import android.util.Log
 import androidx.annotation.RawRes
 import com.example.robotoperator.RobotApplication
+import com.example.robotoperator.model.AnnotationType
 import java.io.Closeable
 import java.io.IOException
 
@@ -125,5 +126,8 @@ object Util {
             closeSilently(inputStream)
         }
         throw RuntimeException("Failed to read raw resource id $resourceId")
+    }
+    fun findAnnotationTypeByColor(color: Int): AnnotationType {
+        return AnnotationType.values().find { it.defaultColor == color } ?: AnnotationType.CUSTOM
     }
 }

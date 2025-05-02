@@ -5,6 +5,7 @@ import android.graphics.PointF
 import android.opengl.GLSurfaceView
 import android.util.Log
 import android.view.MotionEvent
+import com.example.robotoperator.domain.model.PointCloud
 import com.example.robotoperator.util.Util.pxToDp
 import com.example.robotoperator.opengl.Model
 import com.example.robotoperator.model.AnnotationType
@@ -20,11 +21,7 @@ class CustomModelSurfaceView(context: Context, model: Model?) : GLSurfaceView(co
     private var pinchStartDistance = 0.0f
     private var touchMode = TOUCH_NONE
     private var currentAnnotationColor: Int = android.graphics.Color.RED
-    
-    // Store selected points
-    private var selectedPoints = mutableListOf<FloatArray>()
-    
-    // Create annotation manager
+
 
     init {
         Log.d(TAG, "🎨 Initializing CustomModelSurfaceView")
@@ -44,10 +41,6 @@ class CustomModelSurfaceView(context: Context, model: Model?) : GLSurfaceView(co
     fun setCubeSelected(selected: Boolean) {
         queueEvent {
             renderer.setCubeSelected(selected)
-            if (!selected) {
-                // Clear selected points when exiting selection mode
-                selectedPoints.clear()
-            }
             requestRender()
         }
     }
@@ -158,49 +151,35 @@ class CustomModelSurfaceView(context: Context, model: Model?) : GLSurfaceView(co
         Log.d(TAG, "🔄 Requesting 90-degree rotation")
         // Queue the rotation operation to run on the GL thread
         //todo can be done better
-        queueEvent {
+       queueEvent {
             Log.d(TAG, "🎯 Executing rotation on GL thread")
             renderer.rotate90Degrees()
             requestRender()
-        }
+       }
     }
 
-    // Function to show cube coordinates
-    fun showCubeCoordinates() {
-        queueEvent {
-            if (renderer.isCubeSelected()) {
-                renderer.cube.getWorldSpaceCoordinates()
-            } else {
-                Log.d(TAG, "Cannot show coordinates - cube is not selected")
-            }
-        }
-    }
-
-    // Function to find points inside the cube with callback for the count
-    fun findPointsInCube(onPointsFound: (List<FloatArray>) -> Unit = {}) {
-        queueEvent {
+    // Function to find points inside the cube with callback
+    fun findPointsInCube(onPointCloudFound: (PointCloud?) -> Unit) {
+       // queueEvent {
             if (renderer.isCubeSelected()) {
                 renderer.model?.let { model ->
                     // Get cube corners in world space
                     val cubeCorners = renderer.cube.getWorldSpaceCoordinates()
                     
                     // Find points inside cube and color them with the current annotation color
-                    val points = renderer.cube.findPointsInCube(model, currentAnnotationColor)
-                    Log.d(TAG, "Found ${points.size} points inside the cube with color: $currentAnnotationColor")
-                    
-                    // Store the points for later use
-                    selectedPoints.clear()
-                    selectedPoints.addAll(points)
-                    
-                    // Call the callback with the points
-                    onPointsFound(points)
-                } ?: Log.d(TAG, "No model available for point detection")
-            } else {
-                Log.d(TAG, "Cannot find points - cube is not selected")
-                onPointsFound(emptyList())
+                    val pointCloud = renderer.cube.findPointsInCube(model, currentAnnotationColor)
+                    //post {
+                        onPointCloudFound(pointCloud)
+                    //}
+                    // Ensure rendering is updated
+                    requestRender()
+                } ?: run {
+                    Log.d(TAG, "No model available for point detection")
+                    post {
+                        onPointCloudFound(null)
+                    }
+                }
             }
-        }
-        requestRender()
     }
     
     // Function to save the current annotation

@@ -1,6 +1,7 @@
 package com.example.robotoperator.ui
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,9 +27,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.robotoperator.R
+import com.example.robotoperator.domain.model.PointCloud
 import com.example.robotoperator.model.AnnotationType
 import com.example.robotoperator.opengl.Model
 import com.example.robotoperator.opengl.ply.PlyParser
@@ -43,28 +47,22 @@ fun GLView(
     modifier: Modifier = Modifier,
     viewModel: GLViewModel = hiltViewModel()
 ) {
-
-
     Log.d(TAG, "⭐ GLView composition started")
     val context = LocalContext.current
     var isSelectionMode by remember { mutableStateOf(false) }
     var glView: CustomModelSurfaceView? by remember { mutableStateOf(null) }
-
     // Add state for current annotation type
     var currentAnnotationType by remember { mutableStateOf(AnnotationType.SPRAY_AREA) }
 
     // Track selected points
     var selectedPointsCount by remember { mutableStateOf(0) }
+    
+    // Store the found point cloud for later saving
+    var currentPointCloud by remember { mutableStateOf<PointCloud?>(null) }
 
     // Create scroll state for the bottom row
     val bottomRowScrollState = rememberScrollState()
 
-    DisposableEffect(Unit) {
-        Log.d(TAG, "📱 GLView entered composition")
-        onDispose {
-            Log.d(TAG, "🗑️ GLView disposed")
-        }
-    }
 
     val model: Model? = remember {
         Log.d(TAG, "🔄 Loading 3D model from assets")
@@ -111,7 +109,6 @@ fun GLView(
             modifier = Modifier.fillMaxWidth(),
             actions = {
                 IconButton(onClick = {
-                    Log.d(TAG, "🔄 Rotate button clicked")
                     glView?.rotate90()
                 }) {
                     Icon(
@@ -124,6 +121,12 @@ fun GLView(
                         isSelectionMode = !isSelectionMode
                         glView?.setCubeSelected(isSelectionMode)
                         Log.d(TAG, "🎯 Cube selection mode changed to: $isSelectionMode")
+                        
+                        // Reset point cloud when exiting selection mode
+                        if (!isSelectionMode) {
+                            currentPointCloud = null
+                            selectedPointsCount = 0
+                        }
                     },
                     modifier = Modifier.padding(horizontal = 8.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -134,7 +137,7 @@ fun GLView(
                     )
                 ) {
                     Text(
-                        text = if (isSelectionMode) "Exit Selection" else "Select Cube",
+                        text = if (isSelectionMode) "Exit" else "Select Cube",
                         style = MaterialTheme.typography.labelLarge
                     )
                 }
@@ -142,30 +145,28 @@ fun GLView(
                 Row(
                     modifier = Modifier.horizontalScroll(bottomRowScrollState)
                 ) {
-                    // Show Coordinates button
-                    Button(
-                        onClick = {
-                            Log.d(TAG, "📍 Show coordinates button clicked")
-                            glView?.showCubeCoordinates()
-                        },
-                        enabled = isSelectionMode,
-                        modifier = Modifier.padding(horizontal = 4.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondary
-                        )
-                    ) {
-                        Text(
-                            text = "Show Coords",
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                    }
 
                     // Find Points button
                     Button(
                         onClick = {
-                            Log.d(TAG, "🔍 Find points button clicked")
-                            glView?.findPointsInCube { points ->
-                                selectedPointsCount = points.size
+                            Log.d(TAG, "🔍 Find Points button clicked")
+                            
+                            // Reset the current point cloud
+                            currentPointCloud = null
+                            selectedPointsCount = 0
+                            
+                            // Find points but don't save yet
+                            glView?.findPointsInCube { pointCloud ->
+                                // Store the point cloud for later saving
+                                currentPointCloud = pointCloud
+                                if (pointCloud != null && pointCloud.points.isNotEmpty()) {
+                                    selectedPointsCount = pointCloud.points.size
+                                    Log.d(TAG, "Found ${pointCloud.points.size} points with type ${pointCloud.annotationType.displayName}")
+                                    Toast.makeText(context, "Found ${pointCloud.points.size} points", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Log.e(TAG, "❌ No points found to store")
+                                    Toast.makeText(context, "No points found in selection", Toast.LENGTH_SHORT).show()
+                                }
                             }
                         },
                         enabled = isSelectionMode,
@@ -175,38 +176,60 @@ fun GLView(
                         )
                     ) {
                         Text(
-                            text = "Find Points",
+                            text = stringResource(R.string.mark),
                             style = MaterialTheme.typography.labelMedium
                         )
                     }
-
-                    // Save Annotation button - Now prepared to use viewModel in the future
+                    
+                    // Save Points button - saves to database
                     Button(
                         onClick = {
-                            Log.d(TAG, "💾 Save annotation button clicked")
-                            glView?.saveAnnotation(currentAnnotationType) { success ->
-                                if (success) {
-                                    Log.d(TAG, "✅ Annotation saved successfully")
-                                    // In the future, we'll save points to Room database:
-                                    // viewModel.savePointCloud(currentAnnotationType, points)
+                            Log.d(TAG, "💾 Save Points button clicked")
+                            
+                            // Save the stored point cloud to the database
+                            currentPointCloud?.let { pointCloud ->
+                                if (pointCloud.points.isNotEmpty()) {
+                                    Log.d(TAG, "Saving ${pointCloud.points.size} points with type ${pointCloud.annotationType.displayName}")
+                                    
+                                    try {
+                                        // Call the viewModel to save the points
+                                        viewModel.savePointCloud(pointCloud.annotationType, pointCloud.points)
+                                        Toast.makeText(context, "Saving ${pointCloud.points.size} points to database", Toast.LENGTH_SHORT).show()
+                                    } catch (e: Exception) {
+                                        Log.e(TAG, "❌ Error while trying to save points: ${e.message}", e)
+                                        Toast.makeText(context, "Error saving points: ${e.message}", Toast.LENGTH_LONG).show()
+                                    }
                                 } else {
-                                    Log.e(TAG, "❌ Failed to save annotation")
+                                    Log.e(TAG, "❌ No points available to save")
+                                    Toast.makeText(context, "No points to save", Toast.LENGTH_SHORT).show()
                                 }
+                            } ?: run {
+                                Log.e(TAG, "❌ No point cloud available - find points first")
+                                Toast.makeText(context, "No points found yet - use Find Points first", Toast.LENGTH_SHORT).show()
                             }
                         },
-                        enabled = isSelectionMode && selectedPointsCount > 0,
+                        enabled = isSelectionMode && currentPointCloud != null && (currentPointCloud?.points?.isNotEmpty() == true),
                         modifier = Modifier.padding(horizontal = 4.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary
                         )
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = "Save Annotation",
-                            modifier = Modifier.padding(end = 4.dp)
-                        )
                         Text(
-                            text = "Save ($selectedPointsCount points)",
+                            text = stringResource(R.string.save),
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
+
+                    Button(
+                        onClick = { viewModel.deleteAllPoints() },
+                        enabled = isSelectionMode,
+                        modifier = Modifier.padding(horizontal = 4.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondary
+                        )
+                    ) {
+                        Text(
+                            text = "Clear DB",
                             style = MaterialTheme.typography.labelMedium
                         )
                     }
@@ -214,5 +237,4 @@ fun GLView(
             }
         )
     }
-    Log.d(TAG, "✨ GLView composition completed")
-} 
+}

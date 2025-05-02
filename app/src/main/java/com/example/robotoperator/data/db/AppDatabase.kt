@@ -4,13 +4,13 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 
 /**
  * Room database for the application
- * Note: We don't need type converters as Room 2.3+ handles enums automatically
- * and our entity only contains primitive types and an enum.
+ * Using version 2 after updating primary key structure
  */
-@Database(entities = [PointVertex::class], version = 1)
+@Database(entities = [PointVertex::class], version = 2)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun pointVertexDao(): PointVertexDao
     
@@ -25,7 +25,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "robot_operator_database"
                 )
-                    .fallbackToDestructiveMigration()
+                    .fallbackToDestructiveMigration() // This will delete old data when schema changes
                     .build()
                 INSTANCE = instance
                 instance
