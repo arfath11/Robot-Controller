@@ -1,10 +1,13 @@
 package com.example.robotoperator.ui
 
 import android.util.Log
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.BottomAppBar
@@ -24,9 +27,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.example.robotoperator.model.AnnotationType
 import com.example.robotoperator.opengl.Model
 import com.example.robotoperator.opengl.ply.PlyParser
 import com.example.robotoperator.opengl.renderer.CustomModelSurfaceView
+import com.example.robotoperator.ui.components.AnnotationTypeSelector
+import androidx.compose.material.icons.filled.Check
 
 private const val TAG = "RobotOperator"
 
@@ -36,6 +42,15 @@ fun GLView(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     var isSelectionMode by remember { mutableStateOf(false) }
     var glView: CustomModelSurfaceView? by remember { mutableStateOf(null) }
+    
+    // Add state for current annotation type
+    var currentAnnotationType by remember { mutableStateOf(AnnotationType.SPRAY_AREA) }
+
+    // Track selected points
+    var selectedPointsCount by remember { mutableStateOf(0) }
+    
+    // Create scroll state for the bottom row
+    val bottomRowScrollState = rememberScrollState()
 
     DisposableEffect(Unit) {
         Log.d(TAG, "📱 GLView entered composition")
@@ -71,6 +86,18 @@ fun GLView(modifier: Modifier = Modifier) {
                 }
             }
         )
+        
+        // Add the annotation type selector component
+        AnnotationTypeSelector(
+            glView = glView,
+            onTypeSelected = { annotationType ->
+                currentAnnotationType = annotationType
+                Log.d(TAG, "Selected annotation type: ${annotationType.displayName}")
+            },
+            currentType = currentAnnotationType,
+            isSelectionActive = isSelectionMode,
+            modifier = Modifier.fillMaxWidth()
+        )
 
         // Single bottom bar with both rotate and selection buttons
         BottomAppBar(
@@ -105,40 +132,75 @@ fun GLView(modifier: Modifier = Modifier) {
                     )
                 }
 
-                // Show Coordinates button
-                Button(
-                    onClick = {
-                        Log.d(TAG, "📍 Show coordinates button clicked")
-                        glView?.showCubeCoordinates()
-                    },
-                    enabled = isSelectionMode,
-                    modifier = Modifier.padding(horizontal = 8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.secondary
-                    )
+                Row(
+                    modifier = Modifier.horizontalScroll(bottomRowScrollState)
                 ) {
-                    Text(
-                        text = "Show Coords",
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                }
+                    // Show Coordinates button
+                    Button(
+                        onClick = {
+                            Log.d(TAG, "📍 Show coordinates button clicked")
+                            glView?.showCubeCoordinates()
+                        },
+                        enabled = isSelectionMode,
+                        modifier = Modifier.padding(horizontal = 4.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondary
+                        )
+                    ) {
+                        Text(
+                            text = "Show Coords",
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
 
-                // Find Points button
-                Button(
-                    onClick = {
-                        Log.d(TAG, "🔍 Find points button clicked")
-                        glView?.findPointsInCube()
-                    },
-                    enabled = isSelectionMode,
-                    modifier = Modifier.padding(horizontal = 8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.tertiary
-                    )
-                ) {
-                    Text(
-                        text = "Find Points",
-                        style = MaterialTheme.typography.labelLarge
-                    )
+                    // Find Points button
+                    Button(
+                        onClick = {
+                            Log.d(TAG, "🔍 Find points button clicked")
+                            glView?.findPointsInCube { points ->
+                                selectedPointsCount = points.size
+                            }
+                        },
+                        enabled = isSelectionMode,
+                        modifier = Modifier.padding(horizontal = 4.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.tertiary
+                        )
+                    ) {
+                        Text(
+                            text = "Find Points",
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
+                    
+                    // Save Annotation button
+                    Button(
+                        onClick = {
+                            Log.d(TAG, "💾 Save annotation button clicked")
+                            glView?.saveAnnotation(currentAnnotationType) { success ->
+                                if (success) {
+                                    Log.d(TAG, "✅ Annotation saved successfully")
+                                } else {
+                                    Log.e(TAG, "❌ Failed to save annotation")
+                                }
+                            }
+                        },
+                        enabled = isSelectionMode && selectedPointsCount > 0,
+                        modifier = Modifier.padding(horizontal = 4.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = "Save Annotation",
+                            modifier = Modifier.padding(end = 4.dp)
+                        )
+                        Text(
+                            text = "Save ($selectedPointsCount points)",
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
                 }
             }
         )

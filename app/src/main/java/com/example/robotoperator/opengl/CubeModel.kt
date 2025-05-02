@@ -9,6 +9,7 @@ import java.nio.IntBuffer
 import java.nio.FloatBuffer
 import com.example.robotoperator.R
 import android.util.Log
+import android.graphics.Color
 
 class CubeModel : ArrayModel() {
     private val cubeColor = floatArrayOf(0.6f, 0.8f, 1.0f, 0.3f) // Light blue with 30% opacity
@@ -285,7 +286,7 @@ class CubeModel : ArrayModel() {
     }
 
     // Function to find points from a model that are inside the cube
-    fun findPointsInCube(model: Model): List<FloatArray> {
+    fun findPointsInCube(model: Model, color: Int = Color.RED): List<FloatArray> {
         val pointsInside = mutableListOf<FloatArray>()
         
         // Get vertex buffer from the model
@@ -298,7 +299,7 @@ class CubeModel : ArrayModel() {
         if (model is ArrayModel) {
             colorBuffer = model.colorBuffer
             if (colorBuffer != null) {
-                Log.d("CubeModel", "Color buffer found, will color points red")
+                Log.d("CubeModel", "Color buffer found, will color points")
             }
         }
         
@@ -310,6 +311,11 @@ class CubeModel : ArrayModel() {
         // Create a copy of the model matrix for transformations
         val modelMatrixCopy = FloatArray(16)
         System.arraycopy(model.modelMatrix, 0, modelMatrixCopy, 0, 16)
+        
+        // Extract color components from the input color
+        val red = Color.red(color) / 255f
+        val green = Color.green(color) / 255f
+        val blue = Color.blue(color) / 255f
         
         // Check each vertex
         var i = 0
@@ -324,22 +330,22 @@ class CubeModel : ArrayModel() {
             if (isPointInCube(pointWorldSpace)) {
                 pointsInside.add(floatArrayOf(pointWorldSpace[0], pointWorldSpace[1], pointWorldSpace[2]))
                 
-                // Color the point red if we have access to color buffer
+                // Color the point with the specified color if we have access to color buffer
                 if (colorBuffer != null) {
                     // Calculate index in color buffer (4 components RGBA per vertex)
                     val colorIndex = (i / 3) * 4
                     if (colorIndex + 3 < colorBuffer.capacity()) {
                         colorBuffer.position(colorIndex)
-                        colorBuffer.put(1.0f)  // Red
-                        colorBuffer.put(0.0f)  // Green
-                        colorBuffer.put(0.0f)  // Blue
-                        colorBuffer.put(1.0f)  // Alpha
+                        colorBuffer.put(red)    // Red component
+                        colorBuffer.put(green)  // Green component
+                        colorBuffer.put(blue)   // Blue component
+                        colorBuffer.put(1.0f)   // Alpha
                     }
                 }
                 
                 // Log first 5 points found for debugging
                 if (pointsInside.size <= 5) {
-                    Log.d("CubeModel", "Found point inside cube: (${pointWorldSpace[0]}, ${pointWorldSpace[1]}, ${pointWorldSpace[2]})")
+                    Log.d("CubeModel", "Found point inside cube: (${pointWorldSpace[0]}, ${pointWorldSpace[1]}, ${pointWorldSpace[2]}) - Color: ($red, $green, $blue)")
                 }
             }
             
