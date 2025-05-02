@@ -11,7 +11,7 @@ enum class AnnotationType(val displayName: String, val defaultColor: Int) {
 }
 
 /**
- * Data class representing a collection of points annotated in the model
+ * Data class representing a collection of pdo not make new oneoints annotated in the model
  * @param id Unique identifier for this annotation
  * @param type The type of annotation (spray area, sand area, obstacle, etc.)
  * @param vertexIndices The indices of vertices in the model that are part of this annotation
