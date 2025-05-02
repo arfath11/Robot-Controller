@@ -2,7 +2,9 @@ package com.example.robotoperator
 
 import android.app.Application
 import com.example.robotoperator.opengl.Model
+import dagger.hilt.android.HiltAndroidApp
 
+@HiltAndroidApp
 class RobotApplication : Application() {
     override fun onCreate() {
         super.onCreate()

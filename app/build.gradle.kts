@@ -78,6 +78,7 @@ dependencies {
     // Dragger hilt
     implementation("com.google.dagger:hilt-android:2.48")
     ksp("com.google.dagger:hilt-android-compiler:2.48")
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
     // Gson for Room type converters
     implementation("com.google.code.gson:gson:2.13.1")

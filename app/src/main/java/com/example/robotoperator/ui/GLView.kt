@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -27,28 +28,34 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.robotoperator.model.AnnotationType
 import com.example.robotoperator.opengl.Model
 import com.example.robotoperator.opengl.ply.PlyParser
 import com.example.robotoperator.opengl.renderer.CustomModelSurfaceView
 import com.example.robotoperator.ui.components.AnnotationTypeSelector
-import androidx.compose.material.icons.filled.Check
+import com.example.robotoperator.ui.viewmodel.GLViewModel
 
 private const val TAG = "RobotOperator"
 
 @Composable
-fun GLView(modifier: Modifier = Modifier) {
+fun GLView(
+    modifier: Modifier = Modifier,
+    viewModel: GLViewModel = hiltViewModel()
+) {
+
+
     Log.d(TAG, "⭐ GLView composition started")
     val context = LocalContext.current
     var isSelectionMode by remember { mutableStateOf(false) }
     var glView: CustomModelSurfaceView? by remember { mutableStateOf(null) }
-    
+
     // Add state for current annotation type
     var currentAnnotationType by remember { mutableStateOf(AnnotationType.SPRAY_AREA) }
 
     // Track selected points
     var selectedPointsCount by remember { mutableStateOf(0) }
-    
+
     // Create scroll state for the bottom row
     val bottomRowScrollState = rememberScrollState()
 
@@ -86,7 +93,7 @@ fun GLView(modifier: Modifier = Modifier) {
                 }
             }
         )
-        
+
         // Add the annotation type selector component
         AnnotationTypeSelector(
             glView = glView,
@@ -172,14 +179,16 @@ fun GLView(modifier: Modifier = Modifier) {
                             style = MaterialTheme.typography.labelMedium
                         )
                     }
-                    
-                    // Save Annotation button
+
+                    // Save Annotation button - Now prepared to use viewModel in the future
                     Button(
                         onClick = {
                             Log.d(TAG, "💾 Save annotation button clicked")
                             glView?.saveAnnotation(currentAnnotationType) { success ->
                                 if (success) {
                                     Log.d(TAG, "✅ Annotation saved successfully")
+                                    // In the future, we'll save points to Room database:
+                                    // viewModel.savePointCloud(currentAnnotationType, points)
                                 } else {
                                     Log.e(TAG, "❌ Failed to save annotation")
                                 }
