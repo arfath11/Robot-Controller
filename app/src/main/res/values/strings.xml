@@ -2,4 +2,6 @@
     <string name="app_name">Robot Operator</string>
     <string name="exit_selection">Exit Selection</string>
     <string name="select_cube">Select Cube</string>
+    <string name="mark">Mark</string>
+    <string name="save">Save</string>
 </resources>

@@ -10,6 +10,8 @@ import java.nio.FloatBuffer
 import com.example.robotoperator.R
 import android.util.Log
 import android.graphics.Color
+import com.example.robotoperator.domain.model.PointCloud
+import com.example.robotoperator.util.Util.findAnnotationTypeByColor
 
 class CubeModel : ArrayModel() {
     private val cubeColor = floatArrayOf(0.6f, 0.8f, 1.0f, 0.3f) // Light blue with 30% opacity
@@ -20,40 +22,40 @@ class CubeModel : ArrayModel() {
         // Define cube vertices (1x1x1 cube centered at origin)
         val vertices = floatArrayOf(
             // Front face
-            -0.5f, -0.5f,  0.5f,  // Front-bottom-left  0
-             0.5f, -0.5f,  0.5f,  // Front-bottom-right 1
-             0.5f,  0.5f,  0.5f,  // Front-top-right    2
-            -0.5f,  0.5f,  0.5f,  // Front-top-left     3
-            
+            -0.5f, -0.5f, 0.5f,  // Front-bottom-left  0
+            0.5f, -0.5f, 0.5f,  // Front-bottom-right 1
+            0.5f, 0.5f, 0.5f,  // Front-top-right    2
+            -0.5f, 0.5f, 0.5f,  // Front-top-left     3
+
             // Back face
             -0.5f, -0.5f, -0.5f,  // Back-bottom-left   4
-             0.5f, -0.5f, -0.5f,  // Back-bottom-right  5
-             0.5f,  0.5f, -0.5f,  // Back-top-right     6
-            -0.5f,  0.5f, -0.5f,  // Back-top-left      7
-            
+            0.5f, -0.5f, -0.5f,  // Back-bottom-right  5
+            0.5f, 0.5f, -0.5f,  // Back-top-right     6
+            -0.5f, 0.5f, -0.5f,  // Back-top-left      7
+
             // Top face
-            -0.5f,  0.5f, -0.5f,  // Top-back-left      8
-             0.5f,  0.5f, -0.5f,  // Top-back-right     9
-             0.5f,  0.5f,  0.5f,  // Top-front-right    10
-            -0.5f,  0.5f,  0.5f,  // Top-front-left     11
-            
+            -0.5f, 0.5f, -0.5f,  // Top-back-left      8
+            0.5f, 0.5f, -0.5f,  // Top-back-right     9
+            0.5f, 0.5f, 0.5f,  // Top-front-right    10
+            -0.5f, 0.5f, 0.5f,  // Top-front-left     11
+
             // Bottom face
             -0.5f, -0.5f, -0.5f,  // Bottom-back-left   12
-             0.5f, -0.5f, -0.5f,  // Bottom-back-right  13
-             0.5f, -0.5f,  0.5f,  // Bottom-front-right 14
-            -0.5f, -0.5f,  0.5f,  // Bottom-front-left  15
-            
+            0.5f, -0.5f, -0.5f,  // Bottom-back-right  13
+            0.5f, -0.5f, 0.5f,  // Bottom-front-right 14
+            -0.5f, -0.5f, 0.5f,  // Bottom-front-left  15
+
             // Right face
-             0.5f, -0.5f, -0.5f,  // Right-bottom-back  16
-             0.5f,  0.5f, -0.5f,  // Right-top-back     17
-             0.5f,  0.5f,  0.5f,  // Right-top-front    18
-             0.5f, -0.5f,  0.5f,  // Right-bottom-front 19
-            
+            0.5f, -0.5f, -0.5f,  // Right-bottom-back  16
+            0.5f, 0.5f, -0.5f,  // Right-top-back     17
+            0.5f, 0.5f, 0.5f,  // Right-top-front    18
+            0.5f, -0.5f, 0.5f,  // Right-bottom-front 19
+
             // Left face
             -0.5f, -0.5f, -0.5f,  // Left-bottom-back   20
-            -0.5f,  0.5f, -0.5f,  // Left-top-back      21
-            -0.5f,  0.5f,  0.5f,  // Left-top-front     22
-            -0.5f, -0.5f,  0.5f   // Left-bottom-front  23
+            -0.5f, 0.5f, -0.5f,  // Left-top-back      21
+            -0.5f, 0.5f, 0.5f,  // Left-top-front     22
+            -0.5f, -0.5f, 0.5f   // Left-bottom-front  23
         )
 
         // Define indices for drawing triangles
@@ -87,31 +89,31 @@ class CubeModel : ArrayModel() {
             0.0f, 0.0f, 1.0f,
             0.0f, 0.0f, 1.0f,
             0.0f, 0.0f, 1.0f,
-            
+
             // Back face
             0.0f, 0.0f, -1.0f,
             0.0f, 0.0f, -1.0f,
             0.0f, 0.0f, -1.0f,
             0.0f, 0.0f, -1.0f,
-            
+
             // Top face
             0.0f, 1.0f, 0.0f,
             0.0f, 1.0f, 0.0f,
             0.0f, 1.0f, 0.0f,
             0.0f, 1.0f, 0.0f,
-            
+
             // Bottom face
             0.0f, -1.0f, 0.0f,
             0.0f, -1.0f, 0.0f,
             0.0f, -1.0f, 0.0f,
             0.0f, -1.0f, 0.0f,
-            
+
             // Right face
             1.0f, 0.0f, 0.0f,
             1.0f, 0.0f, 0.0f,
             1.0f, 0.0f, 0.0f,
             1.0f, 0.0f, 0.0f,
-            
+
             // Left face
             -1.0f, 0.0f, 0.0f,
             -1.0f, 0.0f, 0.0f,
@@ -163,11 +165,11 @@ class CubeModel : ArrayModel() {
 
         // Initialize model matrix
         Matrix.setIdentityM(modelMatrix, 0)
-        
+
         // Set cube size to 60% of the scene size
         val scale = boundSize * 0.6f
         Matrix.scaleM(modelMatrix, 0, scale, scale, scale)
-        
+
         // Move cube slightly forward for better visibility
         Matrix.translateM(modelMatrix, 0, 0f, 0f, boundSize * 0.2f)
     }
@@ -180,16 +182,16 @@ class CubeModel : ArrayModel() {
         val currentBlendDstFactor = IntArray(1)
         GLES32.glGetIntegerv(GLES32.GL_BLEND_SRC_ALPHA, currentBlendSrcFactor, 0)
         GLES32.glGetIntegerv(GLES32.GL_BLEND_DST_ALPHA, currentBlendDstFactor, 0)
-        
+
         // Configure OpenGL state for transparent cube
         GLES32.glEnable(GLES32.GL_DEPTH_TEST)
         GLES32.glDisable(GLES32.GL_CULL_FACE)
         GLES32.glEnable(GLES32.GL_BLEND)
         GLES32.glBlendFunc(GLES32.GL_SRC_ALPHA, GLES32.GL_ONE_MINUS_SRC_ALPHA)
-        
+
         // Draw the cube
         super.draw(viewMatrix, projectionMatrix, light)
-        
+
         // Restore previous OpenGL state
         if (!depthTestEnabled) {
             GLES32.glDisable(GLES32.GL_DEPTH_TEST)
@@ -215,7 +217,7 @@ class CubeModel : ArrayModel() {
             floatArrayOf(0.5f, -0.5f, 0.5f, 1f),    // Bottom Right Front
             floatArrayOf(0.5f, 0.5f, 0.5f, 1f),     // Top Right Front
             floatArrayOf(-0.5f, 0.5f, 0.5f, 1f),    // Top Left Front
-            
+
             // Back face corners
             floatArrayOf(-0.5f, -0.5f, -0.5f, 1f),  // Bottom Left Back
             floatArrayOf(0.5f, -0.5f, -0.5f, 1f),   // Bottom Right Back
@@ -234,7 +236,7 @@ class CubeModel : ArrayModel() {
 
         for (i in corners.indices) {
             Matrix.multiplyMV(worldCorners[i], 0, modelMatrix, 0, corners[i], 0)
-            
+
             // Update min/max values
             minX = minOf(minX, worldCorners[i][0])
             minY = minOf(minY, worldCorners[i][1])
@@ -243,27 +245,6 @@ class CubeModel : ArrayModel() {
             maxY = maxOf(maxY, worldCorners[i][1])
             maxZ = maxOf(maxZ, worldCorners[i][2])
         }
-
-        // Log the coordinates
-        Log.d("CubeCoords", """
-            Cube World Space Coordinates:
-            Min Bounds: ($minX, $minY, $minZ)
-            Max Bounds: ($maxX, $maxY, $maxZ)
-            
-            Corner Coordinates:
-            Front Face:
-            Bottom Left:  (${worldCorners[0][0]}, ${worldCorners[0][1]}, ${worldCorners[0][2]})
-            Bottom Right: (${worldCorners[1][0]}, ${worldCorners[1][1]}, ${worldCorners[1][2]})
-            Top Right:    (${worldCorners[2][0]}, ${worldCorners[2][1]}, ${worldCorners[2][2]})
-            Top Left:     (${worldCorners[3][0]}, ${worldCorners[3][1]}, ${worldCorners[3][2]})
-            
-            Back Face:
-            Bottom Left:  (${worldCorners[4][0]}, ${worldCorners[4][1]}, ${worldCorners[4][2]})
-            Bottom Right: (${worldCorners[5][0]}, ${worldCorners[5][1]}, ${worldCorners[5][2]})
-            Top Right:    (${worldCorners[6][0]}, ${worldCorners[6][1]}, ${worldCorners[6][2]})
-            Top Left:     (${worldCorners[7][0]}, ${worldCorners[7][1]}, ${worldCorners[7][2]})
-        """.trimIndent())
-
         return worldCorners
     }
 
@@ -272,27 +253,27 @@ class CubeModel : ArrayModel() {
         // Create inverse model matrix to transform world space point to local space
         val inverseModelMatrix = FloatArray(16)
         Matrix.invertM(inverseModelMatrix, 0, modelMatrix, 0)
-        
+
         // Transform point to local space
         val pointLocalSpace = FloatArray(4)
         pointWorldSpace[3] = 1.0f // Make sure we have a point, not a vector
         Matrix.multiplyMV(pointLocalSpace, 0, inverseModelMatrix, 0, pointWorldSpace, 0)
-        
+
         // In local space, the cube is centered at origin with size 1
         // So check if point is within [-0.5, 0.5] in all dimensions
         return pointLocalSpace[0] >= -0.5f && pointLocalSpace[0] <= 0.5f &&
-               pointLocalSpace[1] >= -0.5f && pointLocalSpace[1] <= 0.5f &&
-               pointLocalSpace[2] >= -0.5f && pointLocalSpace[2] <= 0.5f
+                pointLocalSpace[1] >= -0.5f && pointLocalSpace[1] <= 0.5f &&
+                pointLocalSpace[2] >= -0.5f && pointLocalSpace[2] <= 0.5f
     }
 
     // Function to find points from a model that are inside the cube
-    fun findPointsInCube(model: Model, color: Int = Color.RED): List<FloatArray> {
+    fun findPointsInCube(model: Model, color: Int = Color.RED): PointCloud? {
         val pointsInside = mutableListOf<FloatArray>()
-        
+
         // Get vertex buffer from the model
-        val vertices = model.vertexBuffer ?: return pointsInside
+        val vertices = model.vertexBuffer ?: return null
         vertices.position(0)
-        
+
         // Try to get the color buffer if the model is an ArrayModel
         var colorBuffer: FloatBuffer? = null
 
@@ -302,34 +283,34 @@ class CubeModel : ArrayModel() {
                 Log.d("CubeModel", "Color buffer found, will color points")
             }
         }
-        
+
         // Create a copy of the vertex data to work with
         val vertexData = FloatArray(vertices.capacity())
         vertices.get(vertexData)
         vertices.position(0)  // Reset position after reading
-        
+
         // Create a copy of the model matrix for transformations
         val modelMatrixCopy = FloatArray(16)
         System.arraycopy(model.modelMatrix, 0, modelMatrixCopy, 0, 16)
-        
+
         // Extract color components from the input color
         val red = Color.red(color) / 255f
         val green = Color.green(color) / 255f
         val blue = Color.blue(color) / 255f
-        
+
         // Check each vertex
         var i = 0
         while (i < vertexData.size) {
             val point = floatArrayOf(vertexData[i], vertexData[i + 1], vertexData[i + 2], 1.0f)
-            
+
             // Transform point to world space using model's model matrix copy
             val pointWorldSpace = FloatArray(4)
             Matrix.multiplyMV(pointWorldSpace, 0, modelMatrixCopy, 0, point, 0)
-            
+
             // Check if point is inside cube
             if (isPointInCube(pointWorldSpace)) {
-                pointsInside.add(floatArrayOf(pointWorldSpace[0], pointWorldSpace[1], pointWorldSpace[2]))
-                
+                pointsInside.add(floatArrayOf(point[0], point[1], point[2]))
+
                 // Color the point with the specified color if we have access to color buffer
                 if (colorBuffer != null) {
                     // Calculate index in color buffer (4 components RGBA per vertex)
@@ -342,20 +323,15 @@ class CubeModel : ArrayModel() {
                         colorBuffer.put(1.0f)   // Alpha
                     }
                 }
-                
-                // Log first 5 points found for debugging
-                if (pointsInside.size <= 5) {
-                    Log.d("CubeModel", "Found point inside cube: (${pointWorldSpace[0]}, ${pointWorldSpace[1]}, ${pointWorldSpace[2]}) - Color: ($red, $green, $blue)")
-                }
             }
-            
+
             i += 3
         }
-        
+
         // Reset color buffer position if we used it
         colorBuffer?.position(0)
-        
+
         Log.d("CubeModel", "Total points found inside cube: ${pointsInside.size}")
-        return pointsInside
+        return PointCloud(points = pointsInside, annotationType = findAnnotationTypeByColor(color))
     }
 } 
