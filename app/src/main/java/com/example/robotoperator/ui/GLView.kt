@@ -233,6 +233,35 @@ fun GLView(
                             style = MaterialTheme.typography.labelMedium
                         )
                     }
+
+                    Button(
+                        onClick = { viewModel.deleteAllPoints() },
+                        enabled = isSelectionMode,
+                        modifier = Modifier.padding(horizontal = 4.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondary
+                        )
+                    ) {
+                        Text(
+                            text = "Load Annotations",
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
+
+                    Button(
+                        onClick = {
+                           val pointClouds = viewModel.getAllPointClouds()
+                        },
+                        modifier = Modifier.padding(horizontal = 4.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.tertiary
+                        )
+                    ) {
+                        Text(
+                            text = "Load Annotations",
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
                 }
             }
         )

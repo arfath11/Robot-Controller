@@ -24,6 +24,12 @@ interface PointVertexDao {
     suspend fun getPointsByType(type: AnnotationType): List<PointVertex>
     
     /**
+     * Get all points from the database
+     */
+    @Query("SELECT * FROM point_vertices")
+    suspend fun getAllPoints(): List<PointVertex>
+    
+    /**
      * Get all distinct annotation types stored in the database
      */
     @Query("SELECT DISTINCT annotationType FROM point_vertices")
