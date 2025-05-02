@@ -31,6 +31,21 @@ class PointCloudRepositoryImpl @Inject constructor(
         }
     }
     
+    override suspend fun getAllPointClouds(): Map<AnnotationType, List<FloatArray>> {
+        // Get all points from the database
+        val allPoints = pointVertexDao.getAllPoints()
+        
+        // Group points by annotation type
+        return allPoints
+            .groupBy { it.annotationType }
+            .mapValues { (_, vertices) ->
+                // Convert each vertex to a float array of [x, y, z]
+                vertices.map { vertex ->
+                    floatArrayOf(vertex.x, vertex.y, vertex.z)
+                }
+            }
+    }
+    
     override suspend fun getAllAnnotationTypes(): List<AnnotationType> {
         return pointVertexDao.getAllAnnotationTypes()
     }

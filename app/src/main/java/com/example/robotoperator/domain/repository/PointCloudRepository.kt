@@ -21,6 +21,12 @@ interface PointCloudRepository {
     suspend fun getPointCloud(annotationType: AnnotationType): List<FloatArray>
     
     /**
+     * Get all points from the database grouped by annotation type
+     * @return Map of annotation types to lists of 3D points
+     */
+    suspend fun getAllPointClouds(): Map<AnnotationType, List<FloatArray>>
+    
+    /**
      * Get all annotation types that have point clouds stored
      * @return List of annotation types
      */
