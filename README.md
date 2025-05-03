@@ -22,6 +22,9 @@ An Android application for 3D visualization and interactive annotation of constr
 
 ## 🧠 Technical Decisions
 
+
+
+
 - **OpenGL ES 3.2** chosen for latest rendering features; device compatibility checked at runtime(Regardless of the Android platform version, a device cannot support the OpenGL ES 3.0 API ).
 - Used `queueEvent()` to communicate between OpenGL rendering thread and UI thread.
 - 3D room model parsed from `.ply` format using custom parser; matrix conversion challenges resolved.
@@ -48,6 +51,7 @@ An Android application for 3D visualization and interactive annotation of constr
 
 ## 🎥 Demo Video
 
+https://github.com/user-attachments/assets/419df49e-24ef-41b5-8200-0738c0b6146e
 
 
 
