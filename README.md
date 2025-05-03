@@ -40,7 +40,7 @@ An Android application for 3D visualization and interactive annotation of constr
 - UI-3D sync has minor delay due to thread context switching.
 - Loading saved annotation has delay.
 - storing annotation data points in very somply float x, y, z values
-- I did not use other 3D libraries like filament, rajawali etc. This would have made wokr easy and fast
+- I did not use other 3D libraries like filament, rajawali etc. This would have made work easy and fast
 - where to place OpenGL specific classes and models in my architecture
 
 ---
