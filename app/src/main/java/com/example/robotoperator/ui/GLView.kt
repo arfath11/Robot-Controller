@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -20,7 +19,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,261 +38,319 @@ import com.example.robotoperator.opengl.renderer.CustomModelSurfaceView
 import com.example.robotoperator.ui.components.AnnotationTypeSelector
 import com.example.robotoperator.ui.viewmodel.GLViewModel
 
-private const val TAG = "RobotOperator"
+private const val TAG = "GLView"
 
 @Composable
 fun GLView(
     modifier: Modifier = Modifier,
     viewModel: GLViewModel = hiltViewModel()
 ) {
-    Log.d(TAG, "⭐ GLView composition started")
     val context = LocalContext.current
     var isSelectionMode by remember { mutableStateOf(false) }
-    var glView: CustomModelSurfaceView? by remember { mutableStateOf(null) }
-    // Add state for current annotation type
     var currentAnnotationType by remember { mutableStateOf(AnnotationType.SPRAY_AREA) }
-
-    // Track selected points
     var selectedPointsCount by remember { mutableStateOf(0) }
-    
-    // Store the found point cloud for later saving
     var currentPointCloud by remember { mutableStateOf<PointCloud?>(null) }
-
-    // Create scroll state for the bottom row
-    val bottomRowScrollState = rememberScrollState()
-
-
-    val model: Model? = remember {
-        Log.d(TAG, "🔄 Loading 3D model from assets")
-        try {
-            context.assets.open("scaniverse_model_binary.ply").use { stream ->
-                PlyParser(stream).also {
-                    Log.d(TAG, "✅ Model loaded successfully")
-                }
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "❌ Failed to load model", e)
-            null
-        }
-    }
+    var glView: CustomModelSurfaceView? by remember { mutableStateOf(null) }
 
     Column(modifier = modifier.fillMaxSize()) {
-        AndroidView(
+        // 3D Model View
+        GLModelView(
+            onViewCreated = { view -> glView = view },
             modifier = Modifier
                 .weight(1f)
-                .fillMaxWidth(),
-            factory = { context ->
-                Log.d(TAG, "🏭 Creating new CustomModelSurfaceView")
-                CustomModelSurfaceView(context, model).also { view ->
-                    glView = view
-                    Log.d(TAG, "🛠️ CustomModelSurfaceView initialized")
-                }
-            }
+                .fillMaxWidth()
         )
 
-        // Add the annotation type selector component
+        // Annotation Type Selector
         AnnotationTypeSelector(
             glView = glView,
             onTypeSelected = { annotationType ->
                 currentAnnotationType = annotationType
-                Log.d(TAG, "Selected annotation type: ${annotationType.displayName}")
             },
             currentType = currentAnnotationType,
             isSelectionActive = isSelectionMode,
             modifier = Modifier.fillMaxWidth()
         )
 
-        // Single bottom bar with both rotate and selection buttons
-        BottomAppBar(
-            modifier = Modifier.fillMaxWidth(),
-            actions = {
-                IconButton(onClick = {
-                    glView?.rotate90()
-                }) {
-                    Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = "Rotate 90°"
-                    )
+        // Bottom Action Bar
+        GLBottomActionBar(
+            isSelectionMode = isSelectionMode,
+            onSelectionModeChanged = { newMode ->
+                isSelectionMode = newMode
+                glView?.setCubeSelected(newMode)
+                
+                if (!newMode) {
+                    currentPointCloud = null
+                    selectedPointsCount = 0
                 }
-                Button(
-                    onClick = {
-                        isSelectionMode = !isSelectionMode
-                        glView?.setCubeSelected(isSelectionMode)
-                        Log.d(TAG, "🎯 Cube selection mode changed to: $isSelectionMode")
-                        
-                        // Reset point cloud when exiting selection mode
-                        if (!isSelectionMode) {
-                            currentPointCloud = null
-                            selectedPointsCount = 0
-                        }
+            },
+            onRotateClicked = { glView?.rotate90() },
+            onFindPoints = {
+                findPoints(
+                    glView = glView,
+                    onPointCloudFound = { pointCloud ->
+                        currentPointCloud = pointCloud
+                        selectedPointsCount = pointCloud?.points?.size ?: 0
                     },
-                    modifier = Modifier.padding(horizontal = 8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isSelectionMode)
-                            MaterialTheme.colorScheme.primaryContainer
-                        else
-                            MaterialTheme.colorScheme.primary
-                    )
-                ) {
-                    Text(
-                        text = if (isSelectionMode) "Exit" else "Select Cube",
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                }
-
-                Row(
-                    modifier = Modifier.horizontalScroll(bottomRowScrollState)
-                ) {
-
-                    // Find Points button
-                    Button(
-                        onClick = {
-                            Log.d(TAG, "🔍 Find Points button clicked")
-                            
-                            // Reset the current point cloud
-                            currentPointCloud = null
-                            selectedPointsCount = 0
-                            
-                            // Find points but don't save yet
-                            glView?.findPointsInCube { pointCloud ->
-                                // Store the point cloud for later saving
-                                currentPointCloud = pointCloud
-                                if (pointCloud != null && pointCloud.points.isNotEmpty()) {
-                                    selectedPointsCount = pointCloud.points.size
-                                    Log.d(TAG, "Found ${pointCloud.points.size} points with type ${pointCloud.annotationType.displayName}")
-                                    Toast.makeText(context, "Found ${pointCloud.points.size} points", Toast.LENGTH_SHORT).show()
-                                } else {
-                                    Log.e(TAG, "❌ No points found to store")
-                                    Toast.makeText(context, "No points found in selection", Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                        },
-                        enabled = isSelectionMode,
-                        modifier = Modifier.padding(horizontal = 4.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.tertiary
-                        )
-                    ) {
-                        Text(
-                            text = stringResource(R.string.mark),
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                    }
-                    
-                    // Save Points button - saves to database
-                    Button(
-                        onClick = {
-                            Log.d(TAG, "💾 Save Points button clicked")
-                            
-                            // Save the stored point cloud to the database
-                            currentPointCloud?.let { pointCloud ->
-                                if (pointCloud.points.isNotEmpty()) {
-                                    Log.d(TAG, "Saving ${pointCloud.points.size} points with type ${pointCloud.annotationType.displayName}")
-                                    
-                                    try {
-                                        // Call the viewModel to save the points
-                                        viewModel.savePointCloud(pointCloud.annotationType, pointCloud.points)
-                                        Toast.makeText(context, "Saving ${pointCloud.points.size} points to database", Toast.LENGTH_SHORT).show()
-                                    } catch (e: Exception) {
-                                        Log.e(TAG, "❌ Error while trying to save points: ${e.message}", e)
-                                        Toast.makeText(context, "Error saving points: ${e.message}", Toast.LENGTH_LONG).show()
-                                    }
-                                } else {
-                                    Log.e(TAG, "❌ No points available to save")
-                                    Toast.makeText(context, "No points to save", Toast.LENGTH_SHORT).show()
-                                }
-                            } ?: run {
-                                Log.e(TAG, "❌ No point cloud available - find points first")
-                                Toast.makeText(context, "No points found yet - use Find Points first", Toast.LENGTH_SHORT).show()
-                            }
-                        },
-                        enabled = isSelectionMode && currentPointCloud != null && (currentPointCloud?.points?.isNotEmpty() == true),
-                        modifier = Modifier.padding(horizontal = 4.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        )
-                    ) {
-                        Text(
-                            text = stringResource(R.string.save),
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                    }
-
-                    Button(
-                        onClick = { viewModel.deleteAllPoints() },
-                        enabled = isSelectionMode,
-                        modifier = Modifier.padding(horizontal = 4.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondary
-                        )
-                    ) {
-                        Text(
-                            text = "Clear DB",
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                    }
-
-                    Button(
-                        onClick = { viewModel.deleteAllPoints() },
-                        enabled = isSelectionMode,
-                        modifier = Modifier.padding(horizontal = 4.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondary
-                        )
-                    ) {
-                        Text(
-                            text = "Load Annotations",
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                    }
-
-                    Button(
-                        onClick = {
-                            Log.d(TAG, "🔄 Load Annotations button clicked")
-                            Toast.makeText(context, "Loading annotations...", Toast.LENGTH_SHORT).show()
-                            
-                            viewModel.getAllPointClouds { pointClouds ->
-                                Log.d(TAG, "📊 Retrieved ${pointClouds.size} point clouds from database")
-                                
-                                if (pointClouds.isEmpty()) {
-                                    Log.d(TAG, "⚠️ No point clouds found in database")
-                                    Toast.makeText(context, "No annotations found in database", Toast.LENGTH_SHORT).show()
-                                    return@getAllPointClouds
-                                }
-                                
-                                // Count total points across all point clouds
-                                val totalPoints = pointClouds.sumOf { it.points.size }
-                                Log.d(TAG, "📍 Total points: $totalPoints across ${pointClouds.size} annotation types")
-                                
-                                try {
-                                    glView?.loadAnnotation(pointClouds)
-                                    Toast.makeText(
-                                        context, 
-                                        "Loaded $totalPoints points across ${pointClouds.size} annotation types", 
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                } catch (e: Exception) {
-                                    Log.e(TAG, "❌ Error loading annotations", e)
-                                    Toast.makeText(
-                                        context,
-                                        "Error loading annotations: ${e.message}",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                }
-                            }
-                        },
-                        modifier = Modifier.padding(horizontal = 4.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.tertiary
-                        )
-                    ) {
-                        Text(
-                            text = "Load Annotations",
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                    }
-                }
-            }
+                    context = context
+                )
+            },
+            onSavePoints = {
+                savePoints(
+                    currentPointCloud = currentPointCloud,
+                    viewModel = viewModel,
+                    context = context
+                )
+            },
+            onClearDatabase = { viewModel.deleteAllPoints() },
+            onLoadAnnotations = {
+                loadAnnotations(
+                    viewModel = viewModel,
+                    glView = glView, 
+                    context = context
+                )
+            },
+            currentPointCloud = currentPointCloud,
+            isSelectionEnabled = isSelectionMode
         )
+    }
+}
+
+@Composable
+private fun GLModelView(
+    onViewCreated: (CustomModelSurfaceView) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+
+    val model: Model? = remember {
+        try {
+            context.assets.open("scaniverse_model_binary.ply").use { stream ->
+                PlyParser(stream)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to load model", e)
+            null
+        }
+    }
+
+    AndroidView(
+        modifier = modifier,
+        factory = { ctx ->
+            CustomModelSurfaceView(ctx, model).also { view ->
+                onViewCreated(view)
+            }
+        }
+    )
+}
+
+@Composable
+private fun GLBottomActionBar(
+    isSelectionMode: Boolean,
+    onSelectionModeChanged: (Boolean) -> Unit,
+    onRotateClicked: () -> Unit,
+    onFindPoints: () -> Unit,
+    onSavePoints: () -> Unit,
+    onClearDatabase: () -> Unit,
+    onLoadAnnotations: () -> Unit,
+    currentPointCloud: PointCloud?,
+    isSelectionEnabled: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val bottomRowScrollState = rememberScrollState()
+
+    BottomAppBar(
+        modifier = modifier,
+        actions = {
+            // Rotate Button
+            IconButton(onClick = onRotateClicked) {
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = "Rotate 90°"
+                )
+            }
+
+            // Selection Mode Button
+            SelectionModeButton(
+                isSelectionMode = isSelectionMode,
+                onSelectionModeChanged = onSelectionModeChanged
+            )
+
+            // Action Buttons
+            Row(
+                modifier = Modifier.horizontalScroll(bottomRowScrollState)
+            ) {
+                AnnotationActionButtons(
+                    onFindPoints = onFindPoints,
+                    onSavePoints = onSavePoints,
+                    onClearDatabase = onClearDatabase,
+                    onLoadAnnotations = onLoadAnnotations,
+                    isSelectionEnabled = isSelectionEnabled,
+                    hasPointsSelected = currentPointCloud != null && currentPointCloud.points.isNotEmpty()
+                )
+            }
+        }
+    )
+}
+
+@Composable
+private fun SelectionModeButton(
+    isSelectionMode: Boolean,
+    onSelectionModeChanged: (Boolean) -> Unit
+) {
+    Button(
+        onClick = { onSelectionModeChanged(!isSelectionMode) },
+        modifier = Modifier.padding(horizontal = 8.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (isSelectionMode)
+                MaterialTheme.colorScheme.primaryContainer
+            else
+                MaterialTheme.colorScheme.primary
+        )
+    ) {
+        Text(
+            text = if (isSelectionMode) "Exit" else "Select Cube",
+            style = MaterialTheme.typography.labelLarge
+        )
+    }
+}
+
+@Composable
+private fun AnnotationActionButtons(
+    onFindPoints: () -> Unit,
+    onSavePoints: () -> Unit,
+    onClearDatabase: () -> Unit,
+    onLoadAnnotations: () -> Unit,
+    isSelectionEnabled: Boolean,
+    hasPointsSelected: Boolean
+) {
+    // Find Points Button
+    Button(
+        onClick = onFindPoints,
+        enabled = isSelectionEnabled,
+        modifier = Modifier.padding(horizontal = 4.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.tertiary
+        )
+    ) {
+        Text(
+            text = stringResource(R.string.mark),
+            style = MaterialTheme.typography.labelMedium
+        )
+    }
+    
+    // Save Points Button
+    Button(
+        onClick = onSavePoints,
+        enabled = isSelectionEnabled && hasPointsSelected,
+        modifier = Modifier.padding(horizontal = 4.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.primary
+        )
+    ) {
+        Text(
+            text = stringResource(R.string.save),
+            style = MaterialTheme.typography.labelMedium
+        )
+    }
+
+    // Clear Database Button
+    Button(
+        onClick = onClearDatabase,
+        enabled = isSelectionEnabled,
+        modifier = Modifier.padding(horizontal = 4.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.secondary
+        )
+    ) {
+        Text(
+            text = "Clear DB",
+            style = MaterialTheme.typography.labelMedium
+        )
+    }
+
+    // Load Annotations Button
+    Button(
+        onClick = onLoadAnnotations,
+        modifier = Modifier.padding(horizontal = 4.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.tertiary
+        )
+    ) {
+        Text(
+            text = "Load Annotations",
+            style = MaterialTheme.typography.labelMedium
+        )
+    }
+}
+
+private fun findPoints(
+    glView: CustomModelSurfaceView?,
+    onPointCloudFound: (PointCloud?) -> Unit,
+    context: android.content.Context
+) {
+    glView?.findPointsInCube { pointCloud ->
+        onPointCloudFound(pointCloud)
+        
+        if (pointCloud != null && pointCloud.points.isNotEmpty()) {
+            Toast.makeText(context, "Found ${pointCloud.points.size} points", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(context, "No points found in selection", Toast.LENGTH_SHORT).show()
+        }
+    }
+}
+
+private fun savePoints(
+    currentPointCloud: PointCloud?,
+    viewModel: GLViewModel,
+    context: android.content.Context
+) {
+    currentPointCloud?.let { pointCloud ->
+        if (pointCloud.points.isNotEmpty()) {
+            try {
+                viewModel.savePointCloud(pointCloud.annotationType, pointCloud.points)
+                Toast.makeText(context, "Saving ${pointCloud.points.size} points to database", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Log.e(TAG, "Error while trying to save points", e)
+                Toast.makeText(context, "Error saving points: ${e.message}", Toast.LENGTH_LONG).show()
+            }
+        } else {
+            Toast.makeText(context, "No points to save", Toast.LENGTH_SHORT).show()
+        }
+    } ?: run {
+        Toast.makeText(context, "No points found yet - use Find Points first", Toast.LENGTH_SHORT).show()
+    }
+}
+
+private fun loadAnnotations(
+    viewModel: GLViewModel,
+    glView: CustomModelSurfaceView?,
+    context: android.content.Context
+) {
+    Toast.makeText(context, "Loading annotations...", Toast.LENGTH_SHORT).show()
+    
+    viewModel.getAllPointClouds { pointClouds ->
+        if (pointClouds.isEmpty()) {
+            Toast.makeText(context, "No annotations found in database", Toast.LENGTH_SHORT).show()
+            return@getAllPointClouds
+        }
+        
+        val totalPoints = pointClouds.sumOf { it.points.size }
+        
+        try {
+            glView?.loadAnnotation(pointClouds)
+            Toast.makeText(
+                context, 
+                "Loaded $totalPoints points across ${pointClouds.size} annotation types", 
+                Toast.LENGTH_SHORT
+            ).show()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error loading annotations", e)
+            Toast.makeText(
+                context,
+                "Error loading annotations: ${e.message}",
+                Toast.LENGTH_LONG
+            ).show()
+        }
     }
 }

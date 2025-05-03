@@ -9,8 +9,8 @@ import com.example.robotoperator.R
 
 
 class Floor : ArrayModel() {
-    private val floorColor = floatArrayOf(0.2f, 0.2f, 0.2f, 0.5f)
-    private val lineColor = floatArrayOf(0.6f, 0.6f, 0.6f, 0.5f)
+    private val floorColor = floatArrayOf(0.2f, 0.2f, 0.2f, 0.0f)
+    private val lineColor = floatArrayOf(0.6f, 0.6f, 0.6f, 0.8f)
     private var extent = 0f
 
     override fun setup(boundSize: Float) {
@@ -76,6 +76,12 @@ class Floor : ArrayModel() {
             return
         }
 
+
+        // Configure for transparent rendering
+        GLES32.glEnable(GLES32.GL_BLEND)
+       
+        GLES32.glDepthMask(false)
+
         GLES32.glUseProgram(glProgram)
         val modelMatrixHandle = GLES32.glGetUniformLocation(glProgram, "u_Model")
         val mvpMatrixHandle = GLES32.glGetUniformLocation(glProgram, "u_MVP")
@@ -104,5 +110,10 @@ class Floor : ArrayModel() {
             GLES32.glDisableVertexAttribArray(normalHandle)
         }
         GLES32.glDisableVertexAttribArray(positionHandle)
+
+        // Restore OpenGL state
+        GLES32.glDepthMask(true)
+        
+
     }
 }
