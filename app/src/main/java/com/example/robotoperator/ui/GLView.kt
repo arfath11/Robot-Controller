@@ -250,7 +250,38 @@ fun GLView(
 
                     Button(
                         onClick = {
-                           val pointClouds = viewModel.getAllPointClouds()
+                            Log.d(TAG, "🔄 Load Annotations button clicked")
+                            Toast.makeText(context, "Loading annotations...", Toast.LENGTH_SHORT).show()
+                            
+                            viewModel.getAllPointClouds { pointClouds ->
+                                Log.d(TAG, "📊 Retrieved ${pointClouds.size} point clouds from database")
+                                
+                                if (pointClouds.isEmpty()) {
+                                    Log.d(TAG, "⚠️ No point clouds found in database")
+                                    Toast.makeText(context, "No annotations found in database", Toast.LENGTH_SHORT).show()
+                                    return@getAllPointClouds
+                                }
+                                
+                                // Count total points across all point clouds
+                                val totalPoints = pointClouds.sumOf { it.points.size }
+                                Log.d(TAG, "📍 Total points: $totalPoints across ${pointClouds.size} annotation types")
+                                
+                                try {
+                                    glView?.loadAnnotation(pointClouds)
+                                    Toast.makeText(
+                                        context, 
+                                        "Loaded $totalPoints points across ${pointClouds.size} annotation types", 
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                } catch (e: Exception) {
+                                    Log.e(TAG, "❌ Error loading annotations", e)
+                                    Toast.makeText(
+                                        context,
+                                        "Error loading annotations: ${e.message}",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                            }
                         },
                         modifier = Modifier.padding(horizontal = 4.dp),
                         colors = ButtonDefaults.buttonColors(

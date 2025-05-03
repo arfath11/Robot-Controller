@@ -67,7 +67,7 @@ class GLViewModel @Inject constructor(
      * Fetches all point clouds from the database
      * @param callback Function to receive the list of PointCloud objects
      */
-    fun getAllPointClouds():List<PointCloud> {
+    fun getAllPointClouds(callback:(List<PointCloud>)-> Unit) {
         var pointClouds: List<PointCloud> = emptyList()
         viewModelScope.launch {
 
@@ -81,8 +81,8 @@ class GLViewModel @Inject constructor(
                         "${pointCloud.points.size} points for type ${pointCloud.annotationType.displayName}"
                     )
                 }
+                callback(pointClouds)
         }
-        return pointClouds
     }
     
     /**

@@ -9,6 +9,7 @@ import com.example.robotoperator.domain.model.PointCloud
 import com.example.robotoperator.util.Util.pxToDp
 import com.example.robotoperator.opengl.Model
 import com.example.robotoperator.model.AnnotationType
+import com.example.robotoperator.opengl.ArrayModel
 import kotlin.math.sqrt
 
 private const val TAG = "RobotOperator"
@@ -182,10 +183,35 @@ class CustomModelSurfaceView(context: Context, model: Model?) : GLSurfaceView(co
             }
     }
     
-    // Function to save the current annotation
-    fun saveAnnotation(type: AnnotationType, onSaveComplete: (Boolean) -> Unit = {}) {
-        queueEvent {
 
+
+    fun loadAnnotation(annotationPoints: List<PointCloud>) {
+        Log.d(TAG, "Loading annotation points size in SurfaceView: ${annotationPoints.size}")
+        
+        // Count total points across all types
+        val totalPoints = annotationPoints.sumOf { it.points.size }
+        Log.d(TAG, "Total points to annotate: $totalPoints across ${annotationPoints.size} annotation types")
+        
+        queueEvent {
+            try {
+                Log.d(TAG, "Processing annotations on GL thread")
+                renderer.model?.let { model ->
+                    if (model is ArrayModel) {
+                        model.loadAnnotatedPoints(annotationPoints)
+                        Log.d(TAG, "Applied annotations to model")
+                        requestRender()
+                    } else {
+                        Log.e(TAG, "Model is not an ArrayModel, cannot apply annotations")
+                    }
+                } ?: run {
+                    Log.e(TAG, "Cannot apply annotations - model is null")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error applying annotations", e)
+            } finally {
+                // Always request render to refresh the display
+                requestRender()
+            }
         }
     }
 
