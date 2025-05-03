@@ -93,4 +93,6 @@ abstract class Model {
             Matrix.scaleM(modelMatrix, 0, scale, scale, scale)
         }
     }
+
+
 }
