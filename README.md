@@ -32,6 +32,7 @@ An Android application for 3D visualization and interactive annotation of constr
 ---
 
 ## 🚧 Known Limitations
+- Did not utilize shaders much for manipulation.
 - Renderer works on a different thread, and updating the UI from it sometimes causes issues.
 - I was confused whether to reference the renderer from the ViewModel or directly from the Compose view
 - Current area selection is limited to rectangular bounding boxes.
@@ -39,9 +40,9 @@ An Android application for 3D visualization and interactive annotation of constr
 - Robot placement not tried
 - UI-3D sync has minor delay due to thread context switching.
 - Loading saved annotation has delay.
-- storing annotation data points in very somply float x, y, z values
-- I did not use other 3D libraries like filament, rajawali etc. This would have made work easy and fast
-- where to place OpenGL specific classes and models in my architecture
+- Storing annotation data points in very somply float x, y, z values
+- Did not use other 3D libraries like filament, rajawali etc. This would have made work easy and fast
+- Where to place OpenGL specific classes and models in my architecture
 
 ---
 
